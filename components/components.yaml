@@ -1,0 +1,332 @@
+schemas:
+  CurrentUserResponse:
+    type: object
+    required:
+      - id
+      - email
+      - name
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Internal Tantusz user ID; ownership is resolved from the session.
+      email:
+        type: string
+        format: email
+      name:
+        type: string
+      pictureUrl:
+        type: string
+        format: uri
+      iban:
+        type: string
+        description: User's stored IBAN number
+        example: "HU42117730161111222233334444"
+      hasBankConnections:
+        type: boolean
+        description: Whether the user has any bank connections
+        example: true
+
+  CsrfResponse:
+    type: object
+    required:
+      - token
+      - headerName
+    properties:
+      token:
+        type: string
+      headerName:
+        type: string
+        example: X-CSRF-TOKEN
+
+  AspspResponse:
+    type: object
+    required:
+      - name
+      - title
+      - country
+    properties:
+      name:
+        type: string
+        description: Unique code/name of the bank/ASPSP
+        example: "SANDBOXFINANCE_SAPI0000"
+      title:
+        type: string
+        description: Display title of the bank
+        example: "Sandbox Bank"
+      country:
+        type: string
+        description: Country code (ISO 3166-1 alpha-2)
+        example: "HU"
+      logoUrl:
+        type: string
+        description: URL to the bank logo if available
+        example: "https://enablebanking.com/logos/sandbox.png"
+
+  BankAuthRequest:
+    type: object
+    required:
+      - aspspName
+    properties:
+      aspspName:
+        type: string
+        description: Name/code of the ASPSP to connect to
+        example: "SANDBOXFINANCE_SAPI0000"
+      country:
+        type: string
+        description: Country code of the ASPSP (defaults to HU)
+        example: "HU"
+      psuType:
+        type: string
+        description: PSU type (personal or business, default personal)
+        example: "personal"
+      redirectUrl:
+        type: string
+        deprecated: true
+        description: >-
+          Omit this field. If supplied, it must exactly match the configured
+          backend bank callback URL; arbitrary redirect overrides are rejected.
+        example: "http://localhost:3000/api/banks/callback"
+      iban:
+        type: string
+        description: Optional IBAN to pre-fill during bank authorization
+        example: "HU42117730161111222233334444"
+
+  BankAuthResponse:
+    type: object
+    required:
+      - url
+      - state
+    properties:
+      url:
+        type: string
+        description: Authorization URL where user should be redirected to authorize access
+        example: "https://auth.enablebanking.com/auth?..."
+      state:
+        type: string
+        description: State identifier for tracking the authorization flow
+        example: "123e4567-e89b-12d3-a456-426614174000"
+
+  BankCallbackRequest:
+    type: object
+    required:
+      - state
+    properties:
+      code:
+        type: string
+        description: Authorization code returned by the ASPSP after user approval
+        example: "auth-code-12345"
+      state:
+        type: string
+        description: State identifier returned in the callback
+        example: "123e4567-e89b-12d3-a456-426614174000"
+      error:
+        type: string
+        description: Provider authorization error, used instead of code on failure
+      error_description:
+        type: string
+        description: Optional provider error details
+
+  BankConnectionResponse:
+    type: object
+    required:
+      - id
+      - aspspName
+      - status
+      - createdAt
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Connection internal ID
+        example: 1
+      aspspName:
+        type: string
+        description: ASPSP code/name
+        example: "SANDBOXFINANCE_SAPI0000"
+      aspspTitle:
+        type: string
+        description: ASPSP display title
+        example: "Sandbox Bank"
+      status:
+        type: string
+        description: Connection status (e.g. AUTHORIZED, EXPIRED, REVOKED)
+        example: "AUTHORIZED"
+      demo:
+        type: boolean
+        default: false
+        description: Whether this is a synthetic demo connection.
+      validUntil:
+        type: string
+        format: date-time
+        description: Consent expiry date
+        example: "2026-12-18T19:55:00Z"
+      createdAt:
+        type: string
+        format: date-time
+        description: Timestamp when connection was established
+        example: "2026-09-19T10:00:00Z"
+
+  BankAccountResponse:
+    type: object
+    required:
+      - id
+      - accountUid
+      - currency
+      - connectionId
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Internal account ID
+        example: 1
+      connectionId:
+        type: integer
+        format: int64
+        description: ID of parent bank connection
+        example: 1
+      accountUid:
+        type: string
+        description: Enable Banking account unique ID
+        example: "acc-uid-987654"
+      iban:
+        type: string
+        description: Account IBAN if available
+        example: "HU42117730161111222233334444"
+      accountNumber:
+        type: string
+        description: Account number or BBAN
+        example: "11773016-11112222-33334444"
+      accountHolder:
+        type: string
+        description: Account holder name
+        example: "Kovacs Janos"
+      currency:
+        type: string
+        description: ISO currency code
+        example: "HUF"
+      balance:
+        type: number
+        format: double
+        description: Current booked balance amount
+        example: 450000.50
+      balanceType:
+        type: string
+        description: Balance type (e.g. closingBooked, expected)
+        example: "closingBooked"
+      lastSyncedAt:
+        type: string
+        format: date-time
+        description: Timestamp when balance was last updated
+        example: "2026-09-19T12:00:00Z"
+
+  DemoBankResponse:
+    type: object
+    required:
+      - connection
+      - account
+    properties:
+      connection:
+        $ref: '#/schemas/BankConnectionResponse'
+      account:
+        $ref: '#/schemas/BankAccountResponse'
+
+  BankTransactionResponse:
+    type: object
+    required:
+      - id
+      - accountId
+      - amount
+      - currency
+      - bookingDate
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Internal transaction ID
+        example: 101
+      accountId:
+        type: integer
+        format: int64
+        description: Internal account ID
+        example: 1
+      externalTransactionId:
+        type: string
+        description: Transaction ID from the bank
+        example: "tx-20260919-001"
+      amount:
+        type: number
+        format: double
+        description: Transaction amount (positive for credit, negative for debit)
+        example: -12500.00
+      currency:
+        type: string
+        description: Currency code
+        example: "HUF"
+      bookingDate:
+        type: string
+        format: date
+        description: Date when transaction was booked
+        example: "2026-09-18"
+      valueDate:
+        type: string
+        format: date
+        description: Value date
+        example: "2026-09-18"
+      creditorName:
+        type: string
+        description: Name of payee/creditor
+        example: "Tesco Express"
+      debtorName:
+        type: string
+        description: Name of payer/debtor
+        example: "Kovacs Janos"
+      remittanceInformation:
+        type: string
+        description: Payment reference or note
+        example: "Vasarlas - Tesco"
+
+  BankSyncResponse:
+    type: object
+    required:
+      - accountId
+      - syncedTransactionsCount
+      - currentBalance
+      - currency
+    properties:
+      accountId:
+        type: integer
+        format: int64
+        description: ID of synchronized account
+        example: 1
+      syncedTransactionsCount:
+        type: integer
+        description: Number of new or updated transactions
+        example: 5
+      currentBalance:
+        type: number
+        format: double
+        description: Updated balance
+        example: 450000.50
+      currency:
+        type: string
+        description: Currency
+        example: "HUF"
+
+  IbanRequest:
+    type: object
+    required:
+      - iban
+    properties:
+      iban:
+        type: string
+        description: IBAN number to store
+        example: "HU42117730161111222233334444"
+
+responses:
+  Unauthenticated:
+    description: A signed-in session is required; the API returns 401 rather than redirecting to Google.
+  InvalidCsrfToken:
+    description: The CSRF token is missing or invalid; fetch /auth/csrf and send the returned token in headerName.
+  ResourceNotFound:
+    description: The resource does not exist or belongs to another user.

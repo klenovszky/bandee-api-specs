@@ -1,0 +1,696 @@
+openapi: "3.0.3"
+info:
+  title: "Tantusz Assistant API"
+  version: "0.1.0"
+  description: "User-owned financial conversations. Browser calls use the existing BFF session and CSRF. Service consumers use an internal bearer-token wrapper."
+servers:
+  -
+    url: "/api"
+security:
+  -
+    sessionCookie: []
+components:
+  schemas:
+    AssistantError:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+    AssistantContext:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantContext"
+    AssistantConversationRequest:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantConversationRequest"
+    AssistantConversation:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantConversation"
+    AssistantConversationPage:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantConversationPage"
+    AssistantMessageRequest:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantMessageRequest"
+    AssistantMessageAccepted:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantMessageAccepted"
+    AssistantEvidence:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantEvidence"
+    AssistantTable:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantTable"
+    AssistantChart:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantChart"
+    AssistantAnswer:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantAnswer"
+    AssistantMessage:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantMessage"
+    AssistantMessagePage:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantMessagePage"
+    AssistantRun:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantRun"
+    AnalyticsPeriod:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsPeriod"
+    AnalyticsQueryRequest:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsQueryRequest"
+    AnalyticsAccount:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsAccount"
+    AnalyticsContextResponse:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsContextResponse"
+    AnalyticsColumn:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsColumn"
+    AnalyticsRow:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsRow"
+    AnalyticsQueryResponse:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsQueryResponse"
+    AnalyticsTransactionSearchRequest:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsTransactionSearchRequest"
+    AnalyticsTransaction:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsTransaction"
+    AnalyticsTransactionPage:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsTransactionPage"
+  securitySchemes:
+    sessionCookie:
+      type: "apiKey"
+      in: "cookie"
+      name: "SESSION"
+paths:
+  "/assistant/conversations":
+    post:
+      operationId: "createAssistantConversation"
+      tags:
+        - "Assistant"
+      summary: "createAssistantConversation"
+      responses:
+        "201":
+          description: "Successful response"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantConversation"
+        "400":
+          description: "Invalid request"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "401":
+          description: "Authentication required"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "403":
+          description: "Forbidden or invalid CSRF"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "404":
+          description: "Resource not found"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "409":
+          description: "Conflict or changed data"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "429":
+          description: "Usage limit"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "503":
+          description: "Service unavailable"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "../components/assistant.yaml#/schemas/AssistantConversationRequest"
+    get:
+      operationId: "listAssistantConversations"
+      tags:
+        - "Assistant"
+      summary: "listAssistantConversations"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantConversationPage"
+        "400":
+          description: "Invalid request"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "401":
+          description: "Authentication required"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "403":
+          description: "Forbidden or invalid CSRF"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "404":
+          description: "Resource not found"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "409":
+          description: "Conflict or changed data"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "429":
+          description: "Usage limit"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "503":
+          description: "Service unavailable"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+      parameters:
+        -
+          name: "mode"
+          in: "query"
+          required: false
+          description: "Selects conversations for this bank-data mode; omitted values use REAL."
+          schema:
+            type: "string"
+            enum:
+              - "REAL"
+              - "DEMO"
+            default: "REAL"
+        -
+          name: "cursor"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            maxLength: 100
+        -
+          name: "limit"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+            minimum: 1
+            maximum: 50
+            default: 20
+  "/assistant/conversations/{conversationId}":
+    get:
+      operationId: "getAssistantConversation"
+      tags:
+        - "Assistant"
+      summary: "Get one of the signed-in user's conversations"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantConversation"
+        "401":
+          description: "Authentication required"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "404":
+          description: "Resource not found"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+      parameters:
+        -
+          name: "conversationId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+    delete:
+      operationId: "deleteAssistantConversation"
+      tags:
+        - "Assistant"
+      summary: "deleteAssistantConversation"
+      responses:
+        "204":
+          description: "Successful response"
+        "400":
+          description: "Invalid request"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "401":
+          description: "Authentication required"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "403":
+          description: "Forbidden or invalid CSRF"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "404":
+          description: "Resource not found"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "409":
+          description: "Conflict or changed data"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "429":
+          description: "Usage limit"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "503":
+          description: "Service unavailable"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+      parameters:
+        -
+          name: "conversationId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+  "/assistant/conversations/{conversationId}/messages":
+    get:
+      operationId: "listAssistantMessages"
+      tags:
+        - "Assistant"
+      summary: "listAssistantMessages"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantMessagePage"
+        "400":
+          description: "Invalid request"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "401":
+          description: "Authentication required"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "403":
+          description: "Forbidden or invalid CSRF"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "404":
+          description: "Resource not found"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "409":
+          description: "Conflict or changed data"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "429":
+          description: "Usage limit"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "503":
+          description: "Service unavailable"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+      parameters:
+        -
+          name: "conversationId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        -
+          name: "cursor"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            maxLength: 100
+        -
+          name: "limit"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+            minimum: 1
+            maximum: 50
+            default: 20
+    post:
+      operationId: "submitAssistantMessage"
+      tags:
+        - "Assistant"
+      summary: "submitAssistantMessage"
+      responses:
+        "202":
+          description: "Successful response"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantMessageAccepted"
+        "400":
+          description: "Invalid request"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "401":
+          description: "Authentication required"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "403":
+          description: "Forbidden or invalid CSRF"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "404":
+          description: "Resource not found"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "409":
+          description: "Conflict or changed data"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "429":
+          description: "Usage limit"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "503":
+          description: "Service unavailable"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "../components/assistant.yaml#/schemas/AssistantMessageRequest"
+      parameters:
+        -
+          name: "conversationId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+  "/assistant/runs/{runId}":
+    get:
+      operationId: "getAssistantRun"
+      tags:
+        - "Assistant"
+      summary: "getAssistantRun"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantRun"
+        "400":
+          description: "Invalid request"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "401":
+          description: "Authentication required"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "403":
+          description: "Forbidden or invalid CSRF"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "404":
+          description: "Resource not found"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "409":
+          description: "Conflict or changed data"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "429":
+          description: "Usage limit"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "503":
+          description: "Service unavailable"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+      parameters:
+        -
+          name: "runId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+  "/assistant/runs/{runId}/cancel":
+    post:
+      operationId: "cancelAssistantRun"
+      tags:
+        - "Assistant"
+      summary: "cancelAssistantRun"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantRun"
+        "400":
+          description: "Invalid request"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "401":
+          description: "Authentication required"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "403":
+          description: "Forbidden or invalid CSRF"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "404":
+          description: "Resource not found"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "409":
+          description: "Conflict or changed data"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "429":
+          description: "Usage limit"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "503":
+          description: "Service unavailable"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+      parameters:
+        -
+          name: "runId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+  "/assistant/runs/{runId}/conversation":
+    get:
+      operationId: "getAssistantRunConversation"
+      tags:
+        - "Assistant"
+      summary: "Get the owning conversation for a signed-in user's run"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantConversation"
+        "401":
+          description: "Authentication required"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "404":
+          description: "Resource not found"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+      parameters:
+        -
+          name: "runId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+  "/assistant/runs/{runId}/evidence/{evidenceId}/transactions":
+    get:
+      operationId: "getAssistantEvidenceTransactions"
+      tags:
+        - "Assistant"
+      summary: "getAssistantEvidenceTransactions"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/analytics.yaml#/schemas/AnalyticsTransactionPage"
+        "400":
+          description: "Invalid request"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "401":
+          description: "Authentication required"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "403":
+          description: "Forbidden or invalid CSRF"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "404":
+          description: "Resource not found"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "409":
+          description: "Conflict or changed data"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "429":
+          description: "Usage limit"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+        "503":
+          description: "Service unavailable"
+          content:
+            "application/json":
+              schema:
+                "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+      parameters:
+        -
+          name: "runId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        -
+          name: "evidenceId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        -
+          name: "cursor"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            maxLength: 100
+        -
+          name: "limit"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+            minimum: 1
+            maximum: 50
+            default: 20

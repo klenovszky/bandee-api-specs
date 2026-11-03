@@ -1,0 +1,78 @@
+openapi: "3.0.3"
+info:
+  title: "Tantusz Assistant Internal Service"
+  version: "0.1.0"
+servers:
+  -
+    url: "/api"
+security:
+  -
+    internalBearer: []
+components:
+  schemas:
+    AssistantError:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+    AssistantContext:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantContext"
+    AssistantConversationRequest:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantConversationRequest"
+    AssistantConversation:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantConversation"
+    AssistantConversationPage:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantConversationPage"
+    AssistantMessageRequest:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantMessageRequest"
+    AssistantMessageAccepted:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantMessageAccepted"
+    AssistantEvidence:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantEvidence"
+    AssistantTable:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantTable"
+    AssistantChart:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantChart"
+    AssistantAnswer:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantAnswer"
+    AssistantMessage:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantMessage"
+    AssistantMessagePage:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantMessagePage"
+    AssistantRun:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantRun"
+    AnalyticsPeriod:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsPeriod"
+    AnalyticsQueryRequest:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsQueryRequest"
+    AnalyticsAccount:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsAccount"
+    AnalyticsContextResponse:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsContextResponse"
+    AnalyticsColumn:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsColumn"
+    AnalyticsRow:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsRow"
+    AnalyticsQueryResponse:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsQueryResponse"
+    AnalyticsTransactionSearchRequest:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsTransactionSearchRequest"
+    AnalyticsTransaction:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsTransaction"
+    AnalyticsTransactionPage:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsTransactionPage"
+  securitySchemes:
+    internalBearer:
+      "$ref": "../internal/analytics-service.yaml#/components/securitySchemes/internalBearer"
+paths:
+  "/assistant/conversations":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1conversations"
+  "/assistant/conversations/{conversationId}":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1conversations~1{conversationId}"
+  "/assistant/conversations/{conversationId}/messages":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1conversations~1{conversationId}~1messages"
+  "/assistant/runs/{runId}":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1runs~1{runId}"
+  "/assistant/runs/{runId}/cancel":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1runs~1{runId}~1cancel"
+  "/assistant/runs/{runId}/conversation":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1runs~1{runId}~1conversation"
+  "/assistant/runs/{runId}/evidence/{evidenceId}/transactions":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1runs~1{runId}~1evidence~1{evidenceId}~1transactions"

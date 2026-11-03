@@ -1,0 +1,124 @@
+openapi: "3.0.3"
+info:
+  title: "Tantusz Backend API"
+  version: "0.1.0"
+servers:
+  -
+    url: "/api"
+security:
+  -
+    sessionCookie: []
+components:
+  schemas:
+    BankConnectionResponse:
+      "$ref": "../components/components.yaml#/schemas/BankConnectionResponse"
+    BankAccountResponse:
+      "$ref": "../components/components.yaml#/schemas/BankAccountResponse"
+    DemoBankResponse:
+      type: "object"
+      required:
+        - "connection"
+        - "account"
+      properties:
+        connection:
+          "$ref": "#/components/schemas/BankConnectionResponse"
+        account:
+          "$ref": "#/components/schemas/BankAccountResponse"
+    AssistantError:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantError"
+    AssistantContext:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantContext"
+    AssistantConversationRequest:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantConversationRequest"
+    AssistantConversation:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantConversation"
+    AssistantConversationPage:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantConversationPage"
+    AssistantMessageRequest:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantMessageRequest"
+    AssistantMessageAccepted:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantMessageAccepted"
+    AssistantEvidence:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantEvidence"
+    AssistantTable:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantTable"
+    AssistantChart:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantChart"
+    AssistantAnswer:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantAnswer"
+    AssistantMessage:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantMessage"
+    AssistantMessagePage:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantMessagePage"
+    AssistantRun:
+      "$ref": "../components/assistant.yaml#/schemas/AssistantRun"
+    AnalyticsPeriod:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsPeriod"
+    AnalyticsQueryRequest:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsQueryRequest"
+    AnalyticsAccount:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsAccount"
+    AnalyticsContextResponse:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsContextResponse"
+    AnalyticsColumn:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsColumn"
+    AnalyticsRow:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsRow"
+    AnalyticsQueryResponse:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsQueryResponse"
+    AnalyticsTransactionSearchRequest:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsTransactionSearchRequest"
+    AnalyticsTransaction:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsTransaction"
+    AnalyticsTransactionPage:
+      "$ref": "../components/analytics.yaml#/schemas/AnalyticsTransactionPage"
+  securitySchemes:
+    sessionCookie:
+      "$ref": "../services/bank-service.yaml#/components/securitySchemes/sessionCookie"
+    internalBearer:
+      "$ref": "../internal/analytics-service.yaml#/components/securitySchemes/internalBearer"
+paths:
+  "/auth/me":
+    "$ref": "../services/bank-service.yaml#/paths/~1auth~1me"
+  "/auth/csrf":
+    "$ref": "../services/bank-service.yaml#/paths/~1auth~1csrf"
+  "/banks/aspsps":
+    "$ref": "../services/bank-service.yaml#/paths/~1banks~1aspsps"
+  "/banks/demo":
+    "$ref": "../services/bank-service.yaml#/paths/~1banks~1demo"
+  "/banks/auth":
+    "$ref": "../services/bank-service.yaml#/paths/~1banks~1auth"
+  "/banks/callback":
+    "$ref": "../services/bank-service.yaml#/paths/~1banks~1callback"
+  "/banks/connections":
+    "$ref": "../services/bank-service.yaml#/paths/~1banks~1connections"
+  "/banks/connections/{connectionId}":
+    "$ref": "../services/bank-service.yaml#/paths/~1banks~1connections~1{connectionId}"
+  "/banks/accounts":
+    "$ref": "../services/bank-service.yaml#/paths/~1banks~1accounts"
+  "/banks/accounts/{accountId}/sync":
+    "$ref": "../services/bank-service.yaml#/paths/~1banks~1accounts~1{accountId}~1sync"
+  "/banks/iban":
+    "$ref": "../services/bank-service.yaml#/paths/~1banks~1iban"
+  "/banks/transactions":
+    "$ref": "../services/bank-service.yaml#/paths/~1banks~1transactions"
+  "/assistant/conversations":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1conversations"
+  "/assistant/conversations/{conversationId}":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1conversations~1{conversationId}"
+  "/assistant/conversations/{conversationId}/messages":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1conversations~1{conversationId}~1messages"
+  "/assistant/runs/{runId}":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1runs~1{runId}"
+  "/assistant/runs/{runId}/cancel":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1runs~1{runId}~1cancel"
+  "/assistant/runs/{runId}/conversation":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1runs~1{runId}~1conversation"
+  "/assistant/runs/{runId}/evidence/{evidenceId}/transactions":
+    "$ref": "../services/assistant-service.yaml#/paths/~1assistant~1runs~1{runId}~1evidence~1{evidenceId}~1transactions"
+  "/internal/analytics/context":
+    "$ref": "../internal/analytics-service.yaml#/paths/~1internal~1analytics~1context"
+  "/internal/analytics/query":
+    "$ref": "../internal/analytics-service.yaml#/paths/~1internal~1analytics~1query"
+  "/internal/analytics/transactions/search":
+    "$ref": "../internal/analytics-service.yaml#/paths/~1internal~1analytics~1transactions~1search"
