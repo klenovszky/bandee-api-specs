@@ -47,7 +47,7 @@ paths:
       tags: [Auth]
       operationId: startGoogleLogin
       summary: Navigate the browser here to start Google OpenID Connect login
-      description: Only openid, email and profile scopes. The backend validates state, nonce, issuer, signature and audience. Only verified allowlisted email addresses may sign in.
+      description: Only openid, email and profile scopes. The backend validates state, nonce, issuer, signature and audience. Any Google account with a verified email address may sign in and receives its own Tantusz user identity. Disabled Tantusz users remain blocked.
       responses:
         "302": { description: Redirect to Google }
         "404": { description: Google login is not configured }
