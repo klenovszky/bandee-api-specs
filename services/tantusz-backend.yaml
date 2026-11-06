@@ -4,6 +4,61 @@ info:
   description: "REST API specification for the Tantusz backend service."
   version: "0.0.1-SNAPSHOT"
 paths:
+  /api/auth/session:
+    get:
+      tags: [Auth]
+      operationId: getSession
+      summary: Read the current browser session
+      description: Public endpoint. Never cached. Authentication uses an HttpOnly same-origin session cookie.
+      responses:
+        "200":
+          description: Authentication availability and current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+  /api/auth/csrf:
+    get:
+      tags: [Auth]
+      operationId: getCsrf
+      summary: Obtain a session-bound CSRF token before a state-changing request
+      responses:
+        "200":
+          description: Send the token in the named header, including on logout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsrfToken'
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logout
+      summary: Invalidate the browser session
+      parameters:
+        - in: header
+          name: X-CSRF-TOKEN
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Session invalidated and cookie deleted }
+        "403": { description: Missing or invalid CSRF token }
+  /api/oauth2/authorization/google:
+    get:
+      tags: [Auth]
+      operationId: startGoogleLogin
+      summary: Navigate the browser here to start Google OpenID Connect login
+      description: Only openid, email and profile scopes. The backend validates state, nonce, issuer, signature and audience. Only verified allowlisted email addresses may sign in.
+      responses:
+        "302": { description: Redirect to Google }
+        "404": { description: Google login is not configured }
+  /api/login/oauth2/code/google:
+    get:
+      tags: [Auth]
+      operationId: googleCallback
+      summary: Google authorization-code callback handled by Spring Security
+      description: Success redirects to the configured frontend origin. Failure redirects there with login=failed and no provider details. Session cookies are HttpOnly and SameSite=Lax; HTTPS deployments require Secure.
+      responses:
+        "302": { description: Redirect to the frontend }
   /api/hello:
     get:
       summary: "Hello World endpoint"
@@ -17,7 +72,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/HelloResponse"
 components:
+  securitySchemes:
+    browserSession:
+      type: apiKey
+      in: cookie
+      name: TANTUSZ_SESSION
   schemas:
+    AuthSession:
+      type: object
+      required: [enabled, authenticated]
+      properties:
+        enabled: { type: boolean }
+        authenticated: { type: boolean }
+        user:
+          $ref: '#/components/schemas/CurrentUser'
+    CurrentUser:
+      type: object
+      required: [id, email, displayName]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        displayName: { type: string }
+    CsrfToken:
+      type: object
+      required: [headerName, token]
+      properties:
+        headerName: { type: string }
+        token: { type: string }
     HelloResponse:
       type: object
       required:
