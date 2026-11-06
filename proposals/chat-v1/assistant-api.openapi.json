@@ -1,0 +1,1038 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Tantusz Chat V1 Proposal - Internal Assistant API",
+    "version": "0.1.0-design",
+    "description": "Design proposal only; no browser client generation. Private network plus mandatory shared service bearer authentication. No cookies, end-user IDs or prices are trusted here. Provider generation has no automatic retry at any layer. SSE transport is explicitly implemented and tested."
+  },
+  "security": [
+    {
+      "serviceBearer": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "AiPreparation"
+    },
+    {
+      "name": "AiGeneration"
+    },
+    {
+      "name": "AiInternalStreams"
+    }
+  ],
+  "paths": {
+    "/internal/ai/prepare": {
+      "post": {
+        "operationId": "prepareGeneration",
+        "tags": [
+          "AiPreparation"
+        ],
+        "summary": "Validate and count tokens without generating",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreparedGeneration"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrepareGeneration"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/ai/generations/{requestId}": {
+      "post": {
+        "operationId": "dispatchGeneration",
+        "tags": [
+          "AiInternalStreams"
+        ],
+        "summary": "Consume one prepared plan and invoke the provider at most once per dispatch",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalStreamEvent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchGeneration"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "description": "Backend must durably reserve and claim dispatch before calling. Duplicate dispatch tokens or a reused plan never invoke the provider again; return 409/status evidence. Commit process-local provider boundary before SDK invocation. Unknown transport results are never automatically replayed. Cancellation tries to stop provider execution; usage may be absent and cost uncertain."
+      },
+      "get": {
+        "operationId": "getGenerationStatus",
+        "tags": [
+          "AiGeneration"
+        ],
+        "summary": "Read process-local execution evidence",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "cancelGeneration",
+        "tags": [
+          "AiGeneration"
+        ],
+        "summary": "Request cancellation without assuming zero cost",
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sanitized application problem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "serviceBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "Problem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "UNAUTHENTICATED",
+              "FORBIDDEN",
+              "NOT_FOUND",
+              "INVALID_INPUT",
+              "IDEMPOTENCY_CONFLICT",
+              "USER_BUSY",
+              "STREAM_BUSY",
+              "STREAM_REQUIRED",
+              "RETRY_NOT_ALLOWED",
+              "RESOURCE_LIMIT",
+              "BUDGET_UNAVAILABLE",
+              "AI_UNAVAILABLE",
+              "CONTEXT_TOO_LARGE",
+              "PROVIDER_FAILURE",
+              "OUTCOME_UNCERTAIN",
+              "REQUEST_EXPIRED",
+              "INTERNAL_ERROR"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "retryAllowed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "retryAllowed"
+        ]
+      },
+      "ExecutionState": {
+        "type": "string",
+        "enum": [
+          "AWAITING_STREAM",
+          "PREPARING",
+          "DISPATCHING",
+          "STREAMING",
+          "CANCEL_REQUESTED",
+          "COMPLETED",
+          "FAILED",
+          "CANCELLED",
+          "INTERRUPTED",
+          "UNKNOWN"
+        ]
+      },
+      "ContextMessage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "SYSTEM",
+              "USER",
+              "ASSISTANT"
+            ]
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ]
+      },
+      "PrepareGeneration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "model": {
+            "type": "string"
+          },
+          "systemPromptVersion": {
+            "type": "string"
+          },
+          "contextHash": {
+            "type": "string"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContextMessage"
+            }
+          },
+          "maxOutputTokens": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "thinkingMode": {
+            "type": "string"
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "requestId",
+          "model",
+          "systemPromptVersion",
+          "contextHash",
+          "messages",
+          "maxOutputTokens",
+          "thinkingMode",
+          "deadline"
+        ],
+        "description": "Token counting and validation only, never generation. Context hash is SHA-256 over RFC 8785 canonical JSON of model, systemPromptVersion, messages, maxOutputTokens and thinkingMode. The plan binds these exact values. Enforce size and deadline limits; tools/caching/multiple candidates are forbidden in V1."
+      },
+      "PreparedGeneration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "planToken": {
+            "type": "string"
+          },
+          "contextHash": {
+            "type": "string"
+          },
+          "modelRevision": {
+            "type": "string"
+          },
+          "inputTokens": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "billableOutputTokenUpperBound": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "boundKind": {
+            "type": "string",
+            "enum": [
+              "VERIFIED_MODEL_LIMIT"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "planToken",
+          "contextHash",
+          "modelRevision",
+          "inputTokens",
+          "billableOutputTokenUpperBound",
+          "boundKind",
+          "expiresAt"
+        ],
+        "description": "Opaque, single-use, process-local prepared plan expires within 30 seconds. Assistant restart invalidates it before any provider call. Counting must be exact or a documented conservative upper bound. Failure to prove the billable output/thinking bound returns AI_UNAVAILABLE. No price authority: backend owns prices and money."
+      },
+      "DispatchGeneration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "dispatchToken": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "planToken": {
+            "type": "string"
+          },
+          "contextHash": {
+            "type": "string"
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "dispatchToken",
+          "planToken",
+          "contextHash",
+          "deadline"
+        ]
+      },
+      "ProviderUsage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "inputTokens": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "outputTokens": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "thinkingTokens": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "cachedInputTokens": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "providerRequestId": {
+            "type": "string"
+          },
+          "modelRevision": {
+            "type": "string"
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "inputTokens",
+          "outputTokens",
+          "thinkingTokens",
+          "cachedInputTokens",
+          "modelRevision",
+          "complete"
+        ],
+        "description": "Normalized non-overlapping billable categories. outputTokens excludes separately reported thinkingTokens. Adapter must verify raw provider semantics; never subtract an unverified field or treat missing usage as zero. complete=true only for authoritative final usage. Prices are backend-owned."
+      },
+      "GenerationStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dispatchToken": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assistantInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "PROVIDER_INVOKED",
+              "STREAMING",
+              "COMPLETED",
+              "FAILED",
+              "CANCEL_REQUESTED",
+              "CANCELLED",
+              "UNKNOWN"
+            ]
+          },
+          "providerInvoked": {
+            "type": "boolean"
+          },
+          "executionConfirmedEnded": {
+            "type": "boolean"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ProviderUsage"
+          }
+        },
+        "required": [
+          "requestId",
+          "dispatchToken",
+          "assistantInstanceId",
+          "state",
+          "providerInvoked",
+          "executionConfirmedEnded"
+        ],
+        "description": "Process-local evidence only. Missing entry/404 after assistant restart proves nothing about an earlier provider invocation. No prompt or response text is returned. Execution completion and final usage completeness are independent."
+      },
+      "InternalStreamEvent": {
+        "description": "SSE name equals type and JSON data uses this envelope. All events bind the durable dispatch token and assistant process ID. delta requires delta. Terminal events carry executionConfirmedEnded and usage only if authoritative. A failed event before provider invocation must explicitly confirm no invocation; otherwise backend stays conservative. Do not forward raw SDK exceptions. Terminal events require providerInvoked and executionConfirmedEnded. accepted/provider-invoked events report the corresponding boundary explicitly.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/InternalAcceptedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/InternalProviderInvokedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/InternalDeltaEvent"
+          },
+          {
+            "$ref": "#/components/schemas/InternalCompletedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/InternalFailedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/InternalCancelledEvent"
+          },
+          {
+            "$ref": "#/components/schemas/InternalHeartbeatEvent"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "accepted": "#/components/schemas/InternalAcceptedEvent",
+            "provider-invoked": "#/components/schemas/InternalProviderInvokedEvent",
+            "delta": "#/components/schemas/InternalDeltaEvent",
+            "completed": "#/components/schemas/InternalCompletedEvent",
+            "failed": "#/components/schemas/InternalFailedEvent",
+            "cancelled": "#/components/schemas/InternalCancelledEvent",
+            "heartbeat": "#/components/schemas/InternalHeartbeatEvent"
+          }
+        }
+      },
+      "InternalAcceptedEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "accepted"
+            ]
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dispatchToken": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assistantInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "providerInvoked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "type",
+          "requestId",
+          "dispatchToken",
+          "assistantInstanceId",
+          "providerInvoked"
+        ]
+      },
+      "InternalProviderInvokedEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "provider-invoked"
+            ]
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dispatchToken": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assistantInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "providerInvoked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "type",
+          "requestId",
+          "dispatchToken",
+          "assistantInstanceId",
+          "providerInvoked"
+        ]
+      },
+      "InternalDeltaEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "delta"
+            ]
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dispatchToken": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assistantInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "delta": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "requestId",
+          "dispatchToken",
+          "assistantInstanceId",
+          "delta"
+        ]
+      },
+      "InternalCompletedEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "completed"
+            ]
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dispatchToken": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assistantInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ProviderUsage"
+          },
+          "executionConfirmedEnded": {
+            "type": "boolean"
+          },
+          "providerInvoked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "type",
+          "requestId",
+          "dispatchToken",
+          "assistantInstanceId",
+          "executionConfirmedEnded",
+          "providerInvoked"
+        ],
+        "description": "Complete response text was delivered. Execution must be confirmed ended. Authoritative usage is included when available; otherwise accounting remains uncertain."
+      },
+      "InternalFailedEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "failed"
+            ]
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dispatchToken": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assistantInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ProviderUsage"
+          },
+          "executionConfirmedEnded": {
+            "type": "boolean"
+          },
+          "providerInvoked": {
+            "type": "boolean"
+          },
+          "problem": {
+            "$ref": "#/components/schemas/Problem"
+          }
+        },
+        "required": [
+          "type",
+          "requestId",
+          "dispatchToken",
+          "assistantInstanceId",
+          "executionConfirmedEnded",
+          "providerInvoked",
+          "problem"
+        ]
+      },
+      "InternalCancelledEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "cancelled"
+            ]
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dispatchToken": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assistantInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ProviderUsage"
+          },
+          "executionConfirmedEnded": {
+            "type": "boolean"
+          },
+          "providerInvoked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "type",
+          "requestId",
+          "dispatchToken",
+          "assistantInstanceId",
+          "executionConfirmedEnded",
+          "providerInvoked"
+        ]
+      },
+      "InternalHeartbeatEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "heartbeat"
+            ]
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dispatchToken": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assistantInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "type",
+          "requestId",
+          "dispatchToken",
+          "assistantInstanceId"
+        ]
+      }
+    }
+  }
+}
