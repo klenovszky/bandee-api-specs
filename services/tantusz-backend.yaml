@@ -71,6 +71,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HelloResponse"
+  /api/chat/conversations:
+    $ref: "./chat-v1.json#/paths/~1api~1chat~1conversations"
+  /api/chat/conversations/{conversationId}:
+    $ref: "./chat-v1.json#/paths/~1api~1chat~1conversations~1{conversationId}"
+  /api/chat/conversations/{conversationId}/messages:
+    $ref: "./chat-v1.json#/paths/~1api~1chat~1conversations~1{conversationId}~1messages"
+  /api/chat/conversations/{conversationId}/requests:
+    $ref: "./chat-v1.json#/paths/~1api~1chat~1conversations~1{conversationId}~1requests"
+  /api/chat/requests/{requestId}:
+    $ref: "./chat-v1.json#/paths/~1api~1chat~1requests~1{requestId}"
+  /api/chat/requests/{requestId}/stream:
+    $ref: "./chat-v1.json#/paths/~1api~1chat~1requests~1{requestId}~1stream"
+  /api/chat/requests/{requestId}/start:
+    $ref: "./chat-v1.json#/paths/~1api~1chat~1requests~1{requestId}~1start"
+  /api/chat/requests/{requestId}/cancel:
+    $ref: "./chat-v1.json#/paths/~1api~1chat~1requests~1{requestId}~1cancel"
+  /api/ai/budget:
+    $ref: "./chat-v1.json#/paths/~1api~1ai~1budget"
 components:
   securitySchemes:
     browserSession:
@@ -78,6 +96,40 @@ components:
       in: cookie
       name: TANTUSZ_SESSION
   schemas:
+    ExecutionState:
+      $ref: "./chat-v1.json#/components/schemas/ExecutionState"
+    AccountingState:
+      $ref: "./chat-v1.json#/components/schemas/AccountingState"
+    Problem:
+      $ref: "./chat-v1.json#/components/schemas/Problem"
+    Conversation:
+      $ref: "./chat-v1.json#/components/schemas/Conversation"
+    Message:
+      $ref: "./chat-v1.json#/components/schemas/Message"
+    RequestStatus:
+      $ref: "./chat-v1.json#/components/schemas/RequestStatus"
+    OwnBudget:
+      $ref: "./chat-v1.json#/components/schemas/OwnBudget"
+    CreateRequest:
+      $ref: "./chat-v1.json#/components/schemas/CreateRequest"
+    PublicStreamEvent:
+      $ref: "./chat-v1.json#/components/schemas/PublicStreamEvent"
+    ConversationPage:
+      $ref: "./chat-v1.json#/components/schemas/ConversationPage"
+    MessagePage:
+      $ref: "./chat-v1.json#/components/schemas/MessagePage"
+    PublicReadyEvent:
+      $ref: "./chat-v1.json#/components/schemas/PublicReadyEvent"
+    PublicStatusEvent:
+      $ref: "./chat-v1.json#/components/schemas/PublicStatusEvent"
+    PublicDeltaEvent:
+      $ref: "./chat-v1.json#/components/schemas/PublicDeltaEvent"
+    PublicTerminalEvent:
+      $ref: "./chat-v1.json#/components/schemas/PublicTerminalEvent"
+    CreateNewTurn:
+      $ref: "./chat-v1.json#/components/schemas/CreateNewTurn"
+    RetryTurn:
+      $ref: "./chat-v1.json#/components/schemas/RetryTurn"
     AuthSession:
       type: object
       required: [enabled, authenticated]

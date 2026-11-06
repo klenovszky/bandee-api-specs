@@ -16,8 +16,48 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HelloResponse"
+  /internal/ai/prepare:
+    $ref: "./chat-v1.json#/paths/~1internal~1ai~1prepare"
+  /internal/ai/generations/{requestId}:
+    $ref: "./chat-v1.json#/paths/~1internal~1ai~1generations~1{requestId}"
 components:
+  securitySchemes:
+    serviceBearer:
+      type: http
+      scheme: bearer
   schemas:
+    Problem:
+      $ref: "./chat-v1.json#/components/schemas/Problem"
+    ExecutionState:
+      $ref: "./chat-v1.json#/components/schemas/ExecutionState"
+    ContextMessage:
+      $ref: "./chat-v1.json#/components/schemas/ContextMessage"
+    PrepareGeneration:
+      $ref: "./chat-v1.json#/components/schemas/PrepareGeneration"
+    PreparedGeneration:
+      $ref: "./chat-v1.json#/components/schemas/PreparedGeneration"
+    DispatchGeneration:
+      $ref: "./chat-v1.json#/components/schemas/DispatchGeneration"
+    ProviderUsage:
+      $ref: "./chat-v1.json#/components/schemas/ProviderUsage"
+    GenerationStatus:
+      $ref: "./chat-v1.json#/components/schemas/GenerationStatus"
+    InternalStreamEvent:
+      $ref: "./chat-v1.json#/components/schemas/InternalStreamEvent"
+    InternalAcceptedEvent:
+      $ref: "./chat-v1.json#/components/schemas/InternalAcceptedEvent"
+    InternalProviderInvokedEvent:
+      $ref: "./chat-v1.json#/components/schemas/InternalProviderInvokedEvent"
+    InternalDeltaEvent:
+      $ref: "./chat-v1.json#/components/schemas/InternalDeltaEvent"
+    InternalCompletedEvent:
+      $ref: "./chat-v1.json#/components/schemas/InternalCompletedEvent"
+    InternalFailedEvent:
+      $ref: "./chat-v1.json#/components/schemas/InternalFailedEvent"
+    InternalCancelledEvent:
+      $ref: "./chat-v1.json#/components/schemas/InternalCancelledEvent"
+    InternalHeartbeatEvent:
+      $ref: "./chat-v1.json#/components/schemas/InternalHeartbeatEvent"
     HelloResponse:
       type: object
       required:
