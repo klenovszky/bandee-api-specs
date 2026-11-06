@@ -3,14 +3,13 @@
 Status: design draft, 2026-11-06. These files are not active contracts and are not
 referenced by consumer generation wrappers. Existing APIs remain unchanged.
 
-- [Browser API](browser-api.openapi.json): conversation and message reads, explicit
+- [Browser API](browser-api.openapi.yaml): conversation and message reads, explicit
   request creation/start/cancellation, read-only SSE subscription and own budget.
-- [Assistant API](assistant-api.openapi.json): authenticated internal preparation,
+- [Assistant API](assistant-api.openapi.yaml): authenticated internal preparation,
   single-dispatch generation, process-local execution evidence and cancellation.
 - [Implementation design](../../../tantusz-design/07-reszletes-design/chat-v1/README.md).
 
-Both files are OpenAPI 3.0.3 JSON documents. JSON is supported by the existing
-OpenAPI toolchain; no new runtime format or consumer dependency is introduced.
+Both files are OpenAPI 3.0.3 YAML documents. All canonical contracts and proposals must use YAML.
 The proposal must be reviewed and integrated into the active service/internal
 contracts before generating application code. Internal APIs must never generate
 a browser client. Streaming transport requires an explicit adapter; generated
