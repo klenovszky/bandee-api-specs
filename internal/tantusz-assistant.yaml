@@ -26,6 +26,8 @@ components:
       type: http
       scheme: bearer
   schemas:
+    ResponseLanguage:
+      $ref: "../services/chat-v1.yaml#/components/schemas/ResponseLanguage"
     Problem:
       $ref: "./chat-v1.yaml#/components/schemas/Problem"
     ExecutionState:

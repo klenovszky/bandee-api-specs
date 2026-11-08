@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Tantusz Chat V1 - Internal Assistant API
-  version: 0.1.0
+  version: 0.2.0
   description: Internal contract; no browser client generation. Private network plus
     mandatory shared service bearer authentication. No cookies, end-user IDs or prices
     are trusted here. Provider generation has no automatic retry at any layer. SSE
@@ -357,6 +357,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        responseLanguage:
+          $ref: '../services/chat-v1.yaml#/components/schemas/ResponseLanguage'
         requestId:
           type: string
           format: uuid
@@ -379,6 +381,7 @@ components:
           type: string
           format: date-time
       required:
+      - responseLanguage
       - requestId
       - model
       - systemPromptVersion
@@ -389,9 +392,13 @@ components:
       - deadline
       description: Token counting and validation only, never generation. Context hash
         is SHA-256 over RFC 8785 canonical JSON of model, systemPromptVersion, messages,
-        maxOutputTokens and thinkingMode. The plan binds these exact values. Enforce
+        maxOutputTokens, thinkingMode and responseLanguage. The plan binds these exact values. Enforce
         size and deadline limits; tools/caching/multiple candidates are forbidden
-        in V1.
+        in V1. The backend supplies a SYSTEM message selecting this language before
+        token counting; the assistant validates the language instruction and retains
+        the exact prepared messages for dispatch. Never append an uncounted language
+        instruction at generation time. Language is fixed for this request; switching
+        the GUI cannot alter an accepted plan or active generation.
     PreparedGeneration:
       type: object
       additionalProperties: false

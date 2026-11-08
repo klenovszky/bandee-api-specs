@@ -96,6 +96,8 @@ components:
       in: cookie
       name: TANTUSZ_SESSION
   schemas:
+    ResponseLanguage:
+      $ref: "./chat-v1.yaml#/components/schemas/ResponseLanguage"
     ExecutionState:
       $ref: "./chat-v1.yaml#/components/schemas/ExecutionState"
     AccountingState:

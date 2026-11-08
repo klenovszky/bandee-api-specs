@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Tantusz Chat V1 - Browser API
-  version: 0.1.0
+  version: 0.2.0
   description: 'All operations require the existing same-origin session. State-changing
     operations require CSRF. GET never starts a provider call. Private responses use
     Cache-Control: no-store. Existing auth operations remain unchanged.'
@@ -798,6 +798,10 @@ components:
       in: cookie
       name: TANTUSZ_SESSION
   schemas:
+    ResponseLanguage:
+      type: string
+      enum: [hu, en]
+      description: Default language of a newly generated answer; explicit translation targets and quoted content are preserved.
     ExecutionState:
       type: string
       enum:
@@ -916,6 +920,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        responseLanguage:
+          $ref: '#/components/schemas/ResponseLanguage'
         id:
           type: string
           format: uuid
@@ -969,6 +975,7 @@ components:
         problem:
           $ref: '#/components/schemas/Problem'
       required:
+      - responseLanguage
       - id
       - clientRequestId
       - executionState
@@ -979,6 +986,7 @@ components:
       description: Content-free status. Conversation and message IDs may be absent
         after actual content deletion. Reading a request never triggers generation.
         Unknown execution and uncertain accounting are separate concepts.
+        responseLanguage is the immutable language accepted for this request, including after restart or content deletion.
     OwnBudget:
       type: object
       additionalProperties: false
@@ -1072,7 +1080,11 @@ components:
         For a retry retryOf is required and content must be absent; it references
         the latest failed/cancelled turn in this conversation. Validate these mutually
         exclusive cases server-side. UUID reuse with different normalized content/conversation/retry
-        target is 409.
+        target or normalized responseLanguage is 409. Missing responseLanguage normalizes
+        to hu for compatibility. A repeated clientRequestId must retain its original
+        language even if the GUI language changed. A retry with a new clientRequestId
+        uses the newly selected responseLanguage; it does not inherit the old answer's
+        language. Changing the GUI alone never starts or cancels generation.
       oneOf:
       - $ref: '#/components/schemas/CreateNewTurn'
       - $ref: '#/components/schemas/RetryTurn'
@@ -1210,6 +1222,11 @@ components:
       - clientRequestId
       - content
       properties:
+        responseLanguage:
+          allOf:
+          - $ref: '#/components/schemas/ResponseLanguage'
+          default: hu
+          description: Omission normalizes to hu. The accepted value is persisted before preparation. Explicit null or unsupported values are invalid.
         clientRequestId:
           type: string
           format: uuid
@@ -1224,6 +1241,11 @@ components:
       - clientRequestId
       - retryOf
       properties:
+        responseLanguage:
+          allOf:
+          - $ref: '#/components/schemas/ResponseLanguage'
+          default: hu
+          description: Omission normalizes to hu. The accepted value is persisted before preparation. Explicit null or unsupported values are invalid.
         clientRequestId:
           type: string
           format: uuid
