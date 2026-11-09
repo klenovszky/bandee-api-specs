@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 info:
-  title: "Tantusz Backend API"
-  description: "REST API specification for the Tantusz backend service."
+  title: "Bandee Backend API"
+  description: "REST API specification for the Bandee backend service."
   version: "0.0.1-SNAPSHOT"
 paths:
   /api/auth/session:
@@ -47,7 +47,7 @@ paths:
       tags: [Auth]
       operationId: startGoogleLogin
       summary: Navigate the browser here to start Google OpenID Connect login
-      description: Only openid, email and profile scopes. The backend validates state, nonce, issuer, signature and audience. Any Google account with a verified email address may sign in and receives its own Tantusz user identity. Disabled Tantusz users remain blocked.
+      description: Only openid, email and profile scopes. The backend validates state, nonce, issuer, signature and audience. Any Google account with a verified email address may sign in and receives its own Bandee user identity. Disabled Bandee users remain blocked.
       responses:
         "302": { description: Redirect to Google }
         "404": { description: Google login is not configured }
@@ -82,7 +82,7 @@ components:
     browserSession:
       type: apiKey
       in: cookie
-      name: TANTUSZ_SESSION
+      name: BANDEE_SESSION
   schemas:
     ResponseLanguage:
       $ref: "./chat-v1.yaml#/components/schemas/ResponseLanguage"

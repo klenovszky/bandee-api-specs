@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Tantusz Chat V1 - Browser API
+  title: Bandee Chat V1 - Browser API
   version: 0.2.0
   description: 'All operations require the existing same-origin session. State-changing
     operations require CSRF. GET never starts a provider call. Private responses use
@@ -796,7 +796,7 @@ components:
     browserSession:
       type: apiKey
       in: cookie
-      name: TANTUSZ_SESSION
+      name: BANDEE_SESSION
   schemas:
     ResponseLanguage:
       type: string

@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Tantusz Chat V1 - Internal Assistant API
+  title: Bandee Chat V1 - Internal Assistant API
   version: 0.2.0
   description: Internal contract; no browser client generation. Private network plus
     mandatory shared service bearer authentication. No cookies, end-user IDs or prices

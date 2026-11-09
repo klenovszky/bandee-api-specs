@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 info:
-  title: "Tantusz Assistant API"
-  description: "REST API specification for the Tantusz assistant service."
+  title: "Bandee Assistant API"
+  description: "REST API specification for the Bandee assistant service."
   version: "0.0.1-SNAPSHOT"
 paths:
   /internal/ai/prepare:

@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Tantusz Chat V1 Proposal - Browser API
+  title: Bandee Chat V1 Proposal - Browser API
   version: 0.1.0-design
   description: 'Design proposal only. Not referenced by consumer wrappers. All operations
     require the existing same-origin session. State-changing operations require CSRF.
@@ -764,7 +764,7 @@ components:
     browserSession:
       type: apiKey
       in: cookie
-      name: TANTUSZ_SESSION
+      name: BANDEE_SESSION
   schemas:
     ExecutionState:
       type: string
