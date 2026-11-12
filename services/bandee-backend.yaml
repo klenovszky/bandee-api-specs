@@ -4,6 +4,16 @@ info:
   description: "REST API specification for the Bandee backend service."
   version: "0.0.1-SNAPSHOT"
 paths:
+  /api/account-deletion/options:
+    $ref: './account-deletion.yaml#/paths/~1api~1account-deletion~1options'
+  /api/account-deletion/intents:
+    $ref: './account-deletion.yaml#/paths/~1api~1account-deletion~1intents'
+  /api/oauth2/authorization/google-delete:
+    $ref: './account-deletion.yaml#/paths/~1api~1oauth2~1authorization~1google-delete'
+  /api/account-deletion:
+    $ref: './account-deletion.yaml#/paths/~1api~1account-deletion'
+  /api/account-deletion/status:
+    $ref: './account-deletion.yaml#/paths/~1api~1account-deletion~1status'
   /api/auth/session:
     get:
       tags: [Auth]

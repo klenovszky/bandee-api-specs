@@ -1,0 +1,188 @@
+openapi: 3.0.3
+info:
+  title: Bandee registered account deletion
+  version: 1.0.0
+  description: >-
+    Delete only the current Google-linked Bandee account, never the Google account.
+    Owner deletion is forbidden until ownership is transferred. Google permission
+    revocation is a separate manual action in this version. Re-registration creates
+    an empty content account without resetting the same identity's monthly budget,
+    manual limits or administrative restrictions. Finalized content-free cost details
+    are retained for 90 days; unresolved financial/execution evidence is not erased.
+paths:
+  /api/account-deletion/options:
+    get:
+      tags: [AccountDeletion]
+      operationId: getAccountDeletionOptions
+      summary: Read account deletion availability
+      security: [{browserSession: []}]
+      responses:
+        '200':
+          description: Operation result; Cache-Control no-store
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AccountDeletionOptions'}
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '503':
+          $ref: '#/components/responses/Problem'
+  /api/account-deletion/intents:
+    post:
+      tags: [AccountDeletion]
+      operationId: prepareAccountDeletion
+      summary: Prepare a fresh same-account Google identification round
+      security: [{browserSession: []}]
+      parameters:
+        - in: header
+          name: X-CSRF-TOKEN
+          required: true
+          schema: {type: string}
+      responses:
+        '201':
+          description: Operation result; Cache-Control no-store
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AccountDeletionStart'}
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '503':
+          $ref: '#/components/responses/Problem'
+  /api/oauth2/authorization/google-delete:
+    get:
+      tags: [AccountDeletion]
+      operationId: startAccountDeletionGoogle
+      summary: Start the prepared account deletion identification round
+      security: [{browserSession: []}]
+      responses:
+        '302':
+          description: Operation result; Cache-Control no-store
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '503':
+          $ref: '#/components/responses/Problem'
+  /api/account-deletion:
+    post:
+      tags: [AccountDeletion]
+      operationId: confirmAccountDeletion
+      summary: Accept irreversible deletion and revoke all app sessions
+      security: [{browserSession: []}]
+      parameters:
+        - in: header
+          name: X-CSRF-TOKEN
+          required: true
+          schema: {type: string}
+      description: >-
+        Requires a nonexpired, single-use, same-account Google-verified intent bound to
+        the current app session and receipt. Google callbacks never enroll or link users.
+        Acceptance is durable and idempotent by clientOperationId within this operation;
+        changed payload conflicts. Stop all CHAT/VOICE_REVIEW/FIRST_TITLE work through
+        the established financial lifecycle, without refunds or automatic AI retries.
+        No profile, token or transcript is returned. READY is not deletion completion.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ConfirmAccountDeletion'}
+      responses:
+        '202':
+          description: Operation result; Cache-Control no-store
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AccountDeletionStatus'}
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '503':
+          $ref: '#/components/responses/Problem'
+  /api/account-deletion/status:
+    get:
+      tags: [AccountDeletion]
+      operationId: getAccountDeletionStatus
+      summary: Read only the operation authorized by the opaque receipt cookie
+      security: []
+      description: >-
+        Returns NONE without a valid HttpOnly BANDEE_DELETE_RECEIPT cookie.
+        The receipt authorizes only minimal status for one operation; an operation UUID
+        is not authorization. Issued before destructive acceptance to support lost-response
+        recovery after the app session is revoked. Never creates an account or paid task.
+      responses:
+        '200':
+          description: Operation result; Cache-Control no-store
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AccountDeletionStatus'}
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '503':
+          $ref: '#/components/responses/Problem'
+components:
+  securitySchemes:
+    browserSession: {type: apiKey, in: cookie, name: BANDEE_SESSION}
+  responses:
+    Problem:
+      description: Sanitized application failure; no-store
+      content:
+        application/json:
+          schema: {$ref: './chat-v1.yaml#/components/schemas/Problem'}
+  schemas:
+    AccountDeletionOptions:
+      type: object
+      properties:
+        enabled: {type: boolean}
+        owner: {type: boolean}
+        confirmationReady: {type: boolean}
+      required: [enabled, owner, confirmationReady]
+    AccountDeletionStart:
+      type: object
+      properties:
+        operationId: {type: string, format: uuid}
+        redirectPath: {type: string, enum: [/api/oauth2/authorization/google-delete]}
+        expiresAt: {type: string, format: date-time}
+      required: [operationId, redirectPath, expiresAt]
+    ConfirmAccountDeletion:
+      type: object
+      additionalProperties: false
+      properties:
+        operationId: {type: string, format: uuid}
+        clientOperationId: {type: string, format: uuid}
+        confirmation: {type: boolean, enum: [true]}
+      required: [operationId, clientOperationId, confirmation]
+    AccountDeletionStatus:
+      type: object
+      properties:
+        operationId: {type: string, format: uuid}
+        phase:
+          type: string
+          enum: [NONE, AWAITING_GOOGLE, READY, DELETION_PENDING, CONTENT_PURGING, ACCOUNTING_ONLY, PURGED, EXPIRED]
+        expiresAt: {type: string, format: date-time}
+        manualGoogleRevocation: {type: boolean, enum: [true]}
+      required: [phase, manualGoogleRevocation]
