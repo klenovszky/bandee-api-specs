@@ -92,6 +92,8 @@ paths:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1messages"
   /api/chat/conversations/{conversationId}/requests:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1requests"
+  /api/chat/conversations/{conversationId}/requests/discard:
+    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1requests~1discard"
   /api/chat/requests/{requestId}:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}"
   /api/chat/requests/{requestId}/stream:

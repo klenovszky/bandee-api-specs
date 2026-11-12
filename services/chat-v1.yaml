@@ -456,6 +456,95 @@ paths:
       security:
       - browserSession: [
           ]
+  /api/chat/conversations/{conversationId}/requests/discard:
+    post:
+      operationId: discardChatRequest
+      tags:
+      - ChatRequests
+      summary: Discard an in-flight creation using its original idempotency key and payload
+      description: >-
+        Atomically resolve or fence the original creation and apply explicit user Stop.
+        Uses the same CreateRequest and clientRequestId, never a new idempotency key.
+        No model call is started. Late create replays return the discarded status.
+        Existing reserved usage is permanently charged in full; content is deleted and
+        the user slot is released independently of background provider termination.
+      responses:
+        '202':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestStatus'
+        '400':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '200':
+          description: Previously accepted identical request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestStatus'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRequest'
+      parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-CSRF-TOKEN
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Obtain the session-bound token from the existing auth CSRF operation.
+      security:
+      - browserSession: [
+          ]
   /api/chat/requests/{requestId}:
     get:
       operationId: getChatRequest
@@ -671,7 +760,12 @@ paths:
       operationId: cancelChatRequest
       tags:
       - ChatRequests
-      summary: Idempotently request cancellation; costs may remain uncertain
+      summary: Idempotently cancel, optionally discarding the turn and settling the full reservation
+      description: >-
+        With discard=true, remove the request turn content, permanently charge the full
+        existing reservation, and immediately release the user slot. Provider termination
+        is tracked separately in the background; discarded output must never reappear.
+        Without discard, retain the existing best-effort cancellation semantics.
       responses:
         '202':
           description: Success
@@ -722,6 +816,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
+      - name: discard
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+        description: Explicit user Stop. Discard content and settle the full existing reservation.
       - name: requestId
         in: path
         required: true
@@ -928,6 +1029,13 @@ components:
       type: object
       additionalProperties: false
       properties:
+        discarded:
+          type: boolean
+          default: false
+          description: >-
+            Content was discarded by explicit user Stop. Do not display request status,
+            partial output or recovery actions. Accounting is final and new requests are
+            allowed independently of background provider termination.
         responseLanguage:
           $ref: '#/components/schemas/ResponseLanguage'
         id:
@@ -973,7 +1081,7 @@ components:
           type: string
           pattern: ^[0-9]+\.[0-9]{9}$
           example: '20.000000000'
-          description: Non-negative USD decimal; never binary floating point.
+          description: Final charged USD, including a full-reservation charge for user Stop; not necessarily measured provider cost.
         createdAt:
           type: string
           format: date-time
