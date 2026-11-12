@@ -370,6 +370,261 @@ paths:
       security:
       - browserSession: [
           ]
+  /api/chat/conversations/{conversationId}/input-analyses:
+    post:
+      operationId: createInputAnalysis
+      tags:
+      - ChatRequests
+      summary: Accept one paid voice review or first-question title task without starting generation
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestStatus'
+        '400':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '200':
+          description: Previously accepted identical request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestStatus'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInputAnalysis'
+      parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-CSRF-TOKEN
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Obtain the session-bound token from the existing auth CSRF operation.
+      description: >-
+        Acquires the same per-user execution slot and enforces the same global,
+        personal and guest limits as chat. Idempotency keys share the chat request
+        namespace; changed purpose, content, conversation or language is a conflict.
+        VOICE_REVIEW requires nonblank content; FIRST_TITLE forbids content and reads
+        the first saved user message server-side. FIRST_TITLE is accepted only when
+        that message has no applied AI title and no successful or unresolved title task.
+        A deliberate retry must be explicit and use a new idempotency key after a
+        confirmed failed attempt; no automatic paid replay is allowed. Acceptance
+        itself never invokes the provider. Use the existing request stream and start
+        operations to execute; auxiliary streams emit lifecycle events but no raw
+        model-output deltas. The validated result is available separately only after
+        confirmed completion. No chat messages are created by an analysis task.
+      security:
+      - browserSession: [
+          ]
+  /api/chat/conversations/{conversationId}/input-analyses/discard:
+    post:
+      operationId: discardInputAnalysis
+      tags:
+      - ChatRequests
+      summary: Resolve an uncertain analysis submission and stop its original task
+      description: >-
+        Atomically resolves the original clientRequestId and detaches only that
+        auxiliary task. Never starts a provider call or creates/deletes a chat turn.
+        Existing reservation, if any, is charged conservatively in full through the
+        existing interruption rules. Unknown execution is not proof of zero cost.
+        Repeating the same original payload is idempotent; mismatched payload is 409.
+        The discard query parameter defaults to true: true erases auxiliary private
+        input/output; false retains it for inspection without making an incomplete
+        result eligible for automatic submission. No automatic paid retry occurs.
+      responses:
+        '202':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestStatus'
+        '400':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '200':
+          description: Previously accepted identical request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestStatus'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInputAnalysis'
+      parameters:
+      - name: discard
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+        description: False resolves a technical interruption while preserving auxiliary input and partial output.
+      - name: conversationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-CSRF-TOKEN
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Obtain the session-bound token from the existing auth CSRF operation.
+      security:
+      - browserSession: [
+          ]
+  /api/chat/input-analyses/{requestId}:
+    get:
+      operationId: getInputAnalysis
+      tags: [ChatRequests]
+      summary: Read the validated result of an owned, completed auxiliary task
+      description: >-
+        Private content; Cache-Control no-store. GET never generates or charges.
+        Return 409 unless execution is confirmed COMPLETED and a validated result
+        exists. Return 404 for foreign, deleted or discarded results. An interrupted
+        result is never treated as approved input. An expired guest cannot read it.
+      security:
+      - browserSession: []
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Validated analysis; never raw provider output
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InputAnalysisResult'
+        '400':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: Sanitized application problem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /api/chat/conversations/{conversationId}/requests:
     post:
       operationId: createChatRequest
@@ -1038,6 +1293,11 @@ components:
       type: object
       additionalProperties: false
       properties:
+        purpose:
+          type: string
+          enum: [CHAT, VOICE_REVIEW, FIRST_TITLE]
+          default: CHAT
+          description: Immutable execution purpose. Auxiliary work has no chat message IDs and is never retryable via retryOf.
         interrupted:
           type: boolean
           default: false
@@ -1112,7 +1372,9 @@ components:
       - retryAllowed
       - executionConfirmedEnded
       - createdAt
-      description: Content-free status. Conversation and message IDs may be absent
+      description: Content-free status. Auxiliary requests have no chat message IDs,
+        emit no raw provider-output deltas and do not allow retryOf. Their validated
+        result is read separately. Conversation and message IDs may be absent
         after actual content deletion. Reading a request never triggers generation.
         Unknown execution and uncertain accounting are separate concepts.
         responseLanguage is the immutable language accepted for this request, including after restart or content deletion.
@@ -1230,6 +1492,8 @@ components:
         language even if the GUI language changed. A retry with a new clientRequestId
         uses the newly selected responseLanguage; it does not inherit the old answer's
         language. Changing the GUI alone never starts or cancels generation.
+        inputAnalysisId is allowed only for a new turn, participates in idempotency,
+        and cannot reference another user, conversation, language or an incomplete task.
       oneOf:
       - $ref: '#/components/schemas/CreateNewTurn'
       - $ref: '#/components/schemas/RetryTurn'
@@ -1367,6 +1631,17 @@ components:
       - clientRequestId
       - content
       properties:
+        inputAnalysisId:
+          type: string
+          format: uuid
+          description: >-
+            Optional completed VOICE_REVIEW request owned by this user in this
+            conversation and language. The supplied content must equal its reviewed
+            text exactly. It can attach a validated short title to the first turn;
+            reuse cannot create a second turn. Include it in the idempotency hash.
+            A REVIEW decision may be sent only through an explicit user Send action;
+            automatic voice submission requires ACCEPT. Omit this field after manual
+            edits; edited text is ordinary user input and receives no analysis title.
         responseLanguage:
           allOf:
           - $ref: '#/components/schemas/ResponseLanguage'
@@ -1397,3 +1672,71 @@ components:
         retryOf:
           type: string
           format: uuid
+    CreateInputAnalysis:
+      type: object
+      additionalProperties: false
+      required: [clientRequestId, mode, responseLanguage]
+      properties:
+        clientRequestId: {type: string, format: uuid}
+        responseLanguage:
+          $ref: '#/components/schemas/ResponseLanguage'
+        mode:
+          type: string
+          enum: [VOICE_REVIEW, FIRST_TITLE]
+        content:
+          type: string
+          minLength: 1
+          maxLength: 16000
+          description: Required only for VOICE_REVIEW; forbidden for FIRST_TITLE. Guest input limits also apply.
+    InputAnalysisResult:
+      type: object
+      additionalProperties: false
+      required: [requestId, mode, responseLanguage, originalText, reviewedText, decision, reviewReason, uncertainTerms]
+      properties:
+        requestId: {type: string, format: uuid}
+        mode:
+          type: string
+          enum: [VOICE_REVIEW, FIRST_TITLE]
+        responseLanguage:
+          $ref: '#/components/schemas/ResponseLanguage'
+        originalText:
+          type: string
+          minLength: 1
+          maxLength: 16000
+        reviewedText:
+          type: string
+          minLength: 1
+          maxLength: 16000
+          description: >-
+            Conservative correction, never an answer. Preserve meaning, unknown terms,
+            names, numbers, negation and code. FIRST_TITLE returns originalText unchanged.
+        decision:
+          type: string
+          enum: [ACCEPT, REVIEW]
+          description: >-
+            A model-assisted estimate, not proof of recognition accuracy. Short
+            contextually meaningful replies are valid. Ambiguity, uncertain terms or
+            possible meaning changes require REVIEW and stop automatic submission.
+        reviewReason:
+          type: string
+          enum: [NONE, AMBIGUOUS, UNCERTAIN_TERMS, POSSIBLE_MEANING_CHANGE]
+          description: Localized by the frontend; no model-generated diagnostic prose. ACCEPT requires NONE and empty uncertainTerms; REVIEW requires a non-NONE reason. FIRST_TITLE uses ACCEPT and NONE.
+        uncertainTerms:
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items: {type: string, minLength: 1, maxLength: 200}
+          description: >-
+            Literal substrings of reviewedText, validated server-side. Mark as
+            uncertain, not as confirmed errors. Never replace an unknown term solely
+            because it is absent from a dictionary. Empty for FIRST_TITLE.
+        shortTitle:
+          type: string
+          minLength: 1
+          maxLength: 32
+          description: >-
+            Optional localized one- or two-word title, at most 32 Unicode code points.
+            For voice, generated in the same call only when the conversation has no
+            saved user turn. For FIRST_TITLE, applied atomically only if its original
+            first-message anchor still matches and no newer title has been applied.
+            The frontend must also handle pixel overflow on narrow screens.

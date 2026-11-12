@@ -90,6 +90,12 @@ paths:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}"
   /api/chat/conversations/{conversationId}/messages:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1messages"
+  /api/chat/conversations/{conversationId}/input-analyses:
+    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1input-analyses"
+  /api/chat/conversations/{conversationId}/input-analyses/discard:
+    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1input-analyses~1discard"
+  /api/chat/input-analyses/{requestId}:
+    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1input-analyses~1{requestId}"
   /api/chat/conversations/{conversationId}/requests:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1requests"
   /api/chat/conversations/{conversationId}/requests/discard:
@@ -111,6 +117,10 @@ components:
       in: cookie
       name: BANDEE_SESSION
   schemas:
+    CreateInputAnalysis:
+      $ref: "./chat-v1.yaml#/components/schemas/CreateInputAnalysis"
+    InputAnalysisResult:
+      $ref: "./chat-v1.yaml#/components/schemas/InputAnalysisResult"
     ResponseLanguage:
       $ref: "./chat-v1.yaml#/components/schemas/ResponseLanguage"
     ExecutionState:
