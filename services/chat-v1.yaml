@@ -461,13 +461,14 @@ paths:
       operationId: discardChatRequest
       tags:
       - ChatRequests
-      summary: Discard an in-flight creation using its original idempotency key and payload
+      summary: Resolve an in-flight creation using its original idempotency key and payload
       description: >-
-        Atomically resolve or fence the original creation and apply explicit user Stop.
+        Atomically resolve or fence the original creation and apply the selected interruption policy.
         Uses the same CreateRequest and clientRequestId, never a new idempotency key.
-        No model call is started. Late create replays return the discarded status.
-        Existing reserved usage is permanently charged in full; content is deleted and
-        the user slot is released independently of background provider termination.
+        No model call is started. Late create replays return the resolved status.
+        Existing reserved usage is permanently charged in full; the user slot is released
+        independently of background provider termination. Content is deleted by default;
+        discard=false preserves the question and partial answer for technical recovery.
       responses:
         '202':
           description: Success
@@ -530,6 +531,13 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateRequest'
       parameters:
+      - name: discard
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+        description: False resolves a technical interruption while preserving question and partial answer.
       - name: conversationId
         in: path
         required: true
@@ -765,7 +773,8 @@ paths:
         With discard=true, remove the request turn content, permanently charge the full
         existing reservation, and immediately release the user slot. Provider termination
         is tracked separately in the background; discarded output must never reappear.
-        Without discard, retain the existing best-effort cancellation semantics.
+        Without discard, finalize interrupted execution with the full existing reservation,
+        preserve content and release the user slot without waiting for provider completion.
       responses:
         '202':
           description: Success
@@ -1029,6 +1038,10 @@ components:
       type: object
       additionalProperties: false
       properties:
+        interrupted:
+          type: boolean
+          default: false
+          description: Interruption is finalized and execution is detached; content is retained unless discarded=true. New requests may proceed without automatic paid replay.
         discarded:
           type: boolean
           default: false
