@@ -1,0 +1,272 @@
+openapi: 3.0.3
+info:
+  title: Bandee Guest Access - Browser API
+  version: 0.1.0
+  description: >-
+    Same-origin guest sessions use the existing HttpOnly BANDEE_SESSION cookie.
+    A guest is an isolated backend user, never a shared anonymous account. All
+    responses and redirects use Cache-Control no-store. State-changing requests
+    require a session-bound CSRF token, including unauthenticated guest creation.
+    Expiry is enforced server-side on every protected request and before dispatch;
+    polling, CSRF reads and stream heartbeats never extend guest activity.
+    Guest access and paid generation are independently disabled by default.
+paths:
+  /api/auth/guest:
+    post:
+      tags: [Auth]
+      operationId: startGuestSession
+      summary: Explicitly create or resume an isolated guest session
+      description: >-
+        Requires no Google account. No request body or client-supplied user ID.
+        An existing active guest session returns the same guest without extending
+        its activity or resetting its allowance. Concurrent creation for the same
+        pre-auth session is serialized. A registered session is rejected with 409
+        SESSION_CONFLICT and is never silently replaced. A successful new session
+        rotates its identifier. Expired access is not revived: the caller must
+        discard stale authentication and obtain a new CSRF token before explicitly
+        starting again. Limits are server-owned and checked atomically. Cookies
+        are HttpOnly, SameSite=Lax, path /api and Secure over HTTPS. No guest UUID
+        or session secret is accepted in a URL or persisted in browser localStorage.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '200':
+          description: Active guest session, newly created or already present
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '401':
+          $ref: '#/components/responses/GuestProblem'
+        '403':
+          $ref: '#/components/responses/GuestProblem'
+        '409':
+          $ref: '#/components/responses/GuestProblem'
+        '429':
+          $ref: '#/components/responses/GuestRateLimit'
+        '503':
+          $ref: '#/components/responses/GuestProblem'
+    delete:
+      tags: [Auth]
+      operationId: retireGuestSession
+      summary: Revoke guest access and queue content deletion
+      description: >-
+        Acts only on the current guest principal. A registered user is rejected
+        with 409 SESSION_CONFLICT; this is not a registered-account deletion API.
+        Acceptance atomically expires the guest and revokes every guest session,
+        clears the browser cookie and queues the resumable cleanup lifecycle.
+        Cancellation and financial reconciliation remain authoritative; a 202
+        response does not claim provider termination or completed content erasure.
+        Content-free accounting records may remain under their separate retention
+        policy. Financial counters are never refunded by deleting a guest.
+      security:
+        - browserSession: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '202':
+          description: Access revoked; asynchronous content deletion accepted
+        '401':
+          $ref: '#/components/responses/GuestProblem'
+        '403':
+          $ref: '#/components/responses/GuestProblem'
+        '409':
+          $ref: '#/components/responses/GuestProblem'
+        '503':
+          $ref: '#/components/responses/GuestProblem'
+  /api/auth/guest/link:
+    post:
+      tags: [Auth]
+      operationId: prepareGuestGoogleLink
+      summary: Prepare explicit, session-bound Google linking
+      description: >-
+        Requires an active guest, enabled Google login and no active or uncertain
+        execution/accounting. Stores a single-use linking intent in the current
+        server-side session for at most five minutes, capped by guest expiry.
+        The caller navigates to the returned same-origin path; this response never
+        contains a session secret, Google token or client-provided return URL.
+        Ordinary Google login uses a separate authorization entry and cannot consume
+        this intent. Preparation never creates a Google identity, grants a monthly
+        budget or extends guest activity. A new preparation replaces the old intent
+        and clears its previous result. A failed callback preserves valid guest access.
+      security:
+        - browserSession: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '200':
+          description: Linking intent prepared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestLinkStart'
+        '401':
+          $ref: '#/components/responses/GuestProblem'
+        '403':
+          $ref: '#/components/responses/GuestProblem'
+        '409':
+          $ref: '#/components/responses/GuestProblem'
+        '503':
+          $ref: '#/components/responses/GuestProblem'
+  /api/oauth2/authorization/google-link:
+    get:
+      tags: [Auth]
+      operationId: startGuestGoogleLink
+      summary: Consume a prepared linking intent and redirect to Google
+      description: >-
+        Browser navigation only. Requires the same active guest session and a live,
+        single-use intent created by prepareGuestGoogleLink. A direct GET without
+        intent is rejected and cannot initiate linking. The intent is consumed and
+        bound to the OAuth request state, nonce, guest UUID, session and expiry.
+        Callback handling uses the existing Google authorization-code callback.
+        No arbitrary redirect or return-origin parameter is accepted. Linking and
+        expiry race atomically; a disabled, expired or retired guest cannot upgrade.
+        Duplicate callbacks cannot attach an identity or grant a budget twice.
+      security:
+        - browserSession: []
+      responses:
+        '302':
+          description: Redirect to Google with server-generated state and nonce
+        '401':
+          $ref: '#/components/responses/GuestProblem'
+        '403':
+          $ref: '#/components/responses/GuestProblem'
+        '409':
+          $ref: '#/components/responses/GuestProblem'
+        '503':
+          $ref: '#/components/responses/GuestProblem'
+components:
+  securitySchemes:
+    browserSession:
+      type: apiKey
+      in: cookie
+      name: BANDEE_SESSION
+  parameters:
+    CsrfHeader:
+      name: X-CSRF-TOKEN
+      in: header
+      required: true
+      description: Obtain a fresh session-bound token from the existing CSRF operation.
+      schema:
+        type: string
+  responses:
+    GuestProblem:
+      description: >-
+        Safe application problem. 401 includes expired or missing guest access;
+        GUEST_EXPIRED is used only when an expired guest can be recognized safely.
+        403 covers disabled access or invalid CSRF; 409 covers session conflict,
+        an invalid linking intent or busy/uncertain work; 503 covers unavailable
+        configuration or storage. No identity ownership or provider details leak.
+      content:
+        application/json:
+          schema:
+            $ref: './chat-v1.yaml#/components/schemas/Problem'
+    GuestRateLimit:
+      description: >-
+        Guest creation rate or outstanding-guest capacity limit reached. No identity
+        is created. Retry-After is a delay in seconds, not permission to automatically
+        create another guest or submit a paid request.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: './chat-v1.yaml#/components/schemas/Problem'
+  schemas:
+    AuthSession:
+      type: object
+      required: [enabled, authenticated]
+      properties:
+        enabled:
+          type: boolean
+          description: Legacy Google-login availability. Does not control guest availability.
+        authenticated: { type: boolean }
+        guestAccess:
+          $ref: '#/components/schemas/GuestAccess'
+        guestLinkResult:
+          $ref: '#/components/schemas/GuestLinkResult'
+        user:
+          $ref: '#/components/schemas/CurrentUser'
+    CurrentUser:
+      type: object
+      required: [id, displayName, kind]
+      description: >-
+        Registered users have a verified email and no guest lifecycle object.
+        Guests have kind GUEST, a guest lifecycle object, no email and no Google
+        picture. UUID is an ownership identifier, never a bearer credential.
+        Guest enablement requires compatible frontend and backend releases.
+      properties:
+        id: { type: string, format: uuid }
+        kind:
+          type: string
+          enum: [REGISTERED, GUEST]
+        email:
+          type: string
+          format: email
+          description: Present only for registered users. Never synthesized for guests.
+        displayName: { type: string }
+        guest:
+          $ref: '#/components/schemas/GuestSession'
+        picture:
+          type: string
+          format: uri
+          description: Optional HTTPS profile picture URL from the current verified Google session. Not stored in the database.
+    GuestAccess:
+      type: object
+      additionalProperties: false
+      required: [enabled, aiEnabled, emptyIdleSeconds, chatIdleSeconds, absoluteLifetimeSeconds, maxConversations, maxMessages, maxInputCharacters]
+      description: >-
+        Public availability and safe policy values. Omission on older backends
+        means guest access is unavailable. enabled controls new guest creation;
+        disabling it alone does not revoke existing access or stop cleanup.
+        aiEnabled is only feature availability, not a budget or generation guarantee.
+      properties:
+        enabled: { type: boolean }
+        aiEnabled: { type: boolean }
+        emptyIdleSeconds: { type: integer, format: int64, minimum: 1 }
+        chatIdleSeconds: { type: integer, format: int64, minimum: 1 }
+        absoluteLifetimeSeconds: { type: integer, format: int64, minimum: 1 }
+        maxConversations: { type: integer, minimum: 1 }
+        maxMessages: { type: integer, minimum: 1 }
+        maxInputCharacters: { type: integer, minimum: 1 }
+    GuestSession:
+      type: object
+      additionalProperties: false
+      required: [createdAt, expiresAt, absoluteExpiresAt, hasStartedChat, canLinkGoogle]
+      description: >-
+        Present only for an authenticated active guest. expiresAt is the effective
+        access deadline, not a promise of physical deletion at that instant. Only
+        accepted meaningful activity can extend it, never beyond absoluteExpiresAt.
+        The server's deadline wins over cookie lifetime and the browser clock.
+        canLinkGoogle is a snapshot; preparation and callback recheck all conditions.
+      properties:
+        createdAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        absoluteExpiresAt: { type: string, format: date-time }
+        hasStartedChat: { type: boolean }
+        canLinkGoogle: { type: boolean }
+    GuestLinkStart:
+      type: object
+      additionalProperties: false
+      required: [redirectPath, expiresAt]
+      properties:
+        redirectPath:
+          type: string
+          enum: [/api/oauth2/authorization/google-link]
+          description: Navigate on the current origin; never a client-controlled URL.
+        expiresAt:
+          type: string
+          format: date-time
+    GuestLinkResult:
+      type: string
+      enum: [LINKED, IDENTITY_EXISTS, USER_BUSY, GUEST_EXPIRED, FAILED]
+      description: >-
+        Optional safe result of the latest linking attempt in this browser session.
+        It persists for session reads until a new attempt or logout; absence means
+        no result. IDENTITY_EXISTS never reveals another user's UUID or profile.
+        Reading this result does not renew guest activity. LINKED is available only
+        in the newly issued registered session; old guest sessions are invalidated.

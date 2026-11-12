@@ -9,7 +9,11 @@ paths:
       tags: [Auth]
       operationId: getSession
       summary: Read the current browser session
-      description: Public endpoint. Never cached. Authentication uses an HttpOnly same-origin session cookie.
+      description: >-
+        Public endpoint. Never cached. Authentication uses an HttpOnly same-origin
+        session cookie. Reading this endpoint never creates a guest, renews guest
+        activity or revives expired access. Guest availability is independent of
+        Google availability. All user data comes from the current server-side principal.
       responses:
         "200":
           description: Authentication availability and current user
@@ -33,7 +37,13 @@ paths:
     post:
       tags: [Auth]
       operationId: logout
-      summary: Invalidate the browser session
+      summary: Invalidate the browser session and retire guest access
+      description: >-
+        For registered users only the current session is invalidated. For guests
+        this also expires the guest and revokes all its sessions; active work is
+        cancelled through the normal execution lifecycle and content deletion is
+        queued. Cancellation never proves zero provider cost. No guest recovery
+        is available after logout. The frontend must explain this before submission.
       parameters:
         - in: header
           name: X-CSRF-TOKEN
@@ -56,9 +66,24 @@ paths:
       tags: [Auth]
       operationId: googleCallback
       summary: Google authorization-code callback handled by Spring Security
-      description: Success redirects to the configured frontend origin. Failure redirects there with login=failed and no provider details. Session cookies are HttpOnly and SameSite=Lax; HTTPS deployments require Secure.
+      description: >-
+        Success redirects to the configured frontend origin. Failure redirects there
+        with login=failed and no provider details. Session cookies are HttpOnly and
+        SameSite=Lax; HTTPS deployments require Secure. A guest-link authorization
+        request is distinguished by its server-side, session-bound state. For a new
+        Google identity, linking atomically upgrades the same active guest UUID and
+        grants the registration monthly budget once. Existing identities never merge.
+        A failed link preserves the still-valid guest session and records only a safe
+        link result. Success revokes all old guest sessions and issues a fresh registered
+        session and CSRF token. Ordinary Google login never silently links a guest.
       responses:
         "302": { description: Redirect to the frontend }
+  /api/auth/guest:
+    $ref: "./guest-access.yaml#/paths/~1api~1auth~1guest"
+  /api/auth/guest/link:
+    $ref: "./guest-access.yaml#/paths/~1api~1auth~1guest~1link"
+  /api/oauth2/authorization/google-link:
+    $ref: "./guest-access.yaml#/paths/~1api~1oauth2~1authorization~1google-link"
   /api/chat/conversations:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations"
   /api/chat/conversations/{conversationId}:
@@ -121,24 +146,17 @@ components:
     RetryTurn:
       $ref: "./chat-v1.yaml#/components/schemas/RetryTurn"
     AuthSession:
-      type: object
-      required: [enabled, authenticated]
-      properties:
-        enabled: { type: boolean }
-        authenticated: { type: boolean }
-        user:
-          $ref: '#/components/schemas/CurrentUser'
+      $ref: './guest-access.yaml#/components/schemas/AuthSession'
     CurrentUser:
-      type: object
-      required: [id, email, displayName]
-      properties:
-        id: { type: string, format: uuid }
-        email: { type: string, format: email }
-        displayName: { type: string }
-        picture:
-          type: string
-          format: uri
-          description: Optional HTTPS profile picture URL from the current verified Google session. Not stored in the database.
+      $ref: './guest-access.yaml#/components/schemas/CurrentUser'
+    GuestAccess:
+      $ref: './guest-access.yaml#/components/schemas/GuestAccess'
+    GuestSession:
+      $ref: './guest-access.yaml#/components/schemas/GuestSession'
+    GuestLinkStart:
+      $ref: './guest-access.yaml#/components/schemas/GuestLinkStart'
+    GuestLinkResult:
+      $ref: './guest-access.yaml#/components/schemas/GuestLinkResult'
     CsrfToken:
       type: object
       required: [headerName, token]

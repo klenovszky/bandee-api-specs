@@ -4,7 +4,11 @@ info:
   version: 0.2.0
   description: 'All operations require the existing same-origin session. State-changing
     operations require CSRF. GET never starts a provider call. Private responses use
-    Cache-Control: no-store. Existing auth operations remain unchanged.'
+    Cache-Control: no-store. Registered and active guest principals use the same
+    ownership checks. Guest expiry is checked before protected operations and
+    dispatch, and while streaming. Session/CSRF/status polling and stream heartbeats
+    never renew guest activity; accepted user actions may renew it within its
+    absolute lifetime. Guest policy limits may be stricter than schema maxima.'
 security:
 - browserSession: [
     ]
@@ -738,7 +742,7 @@ paths:
       operationId: getOwnAiBudget
       tags:
       - AiBudget
-      summary: Read own monthly budget snapshot
+      summary: Read own monthly or guest-lifetime budget snapshot
       responses:
         '200':
           description: Success
@@ -831,6 +835,10 @@ components:
           type: string
           enum:
           - UNAUTHENTICATED
+          - GUEST_EXPIRED
+          - GUEST_DISABLED
+          - SESSION_CONFLICT
+          - LINK_UNAVAILABLE
           - FORBIDDEN
           - NOT_FOUND
           - INVALID_INPUT
@@ -991,6 +999,11 @@ components:
       type: object
       additionalProperties: false
       properties:
+        budgetScope:
+          type: string
+          enum: [MONTHLY, GUEST_LIFETIME]
+          default: MONTHLY
+          description: Guest lifetime amounts never reset on a calendar month boundary.
         periodStart:
           type: string
           format: date-time
@@ -1040,6 +1053,8 @@ components:
           - AI_DISABLED
           - UNRESOLVED_EXECUTION
           - CONFIGURATION_REQUIRED
+          - GUEST_DISABLED
+          - GUEST_POOL_LIMIT
         globalLimitUsd:
           type: string
           pattern: ^[0-9]+\.[0-9]{9}$
@@ -1071,10 +1086,19 @@ components:
       - availableUsd
       - canGenerate
       - blockReason
-      description: Only own usage. For the owner, availableUsd is global availability
-        and global* fields are present. For other users global* fields are absent,
-        availableUsd is personal availability and canGenerate also checks the undisclosed
-        global cap. This is a snapshot, not a reservation.
+      description: >-
+        Only own usage. For the registered owner, availableUsd is global availability
+        and global* fields are present. For other registered users global* fields are
+        absent, availableUsd is personal availability and canGenerate also checks the
+        undisclosed global cap. For GUEST_LIFETIME, owner is always false, periodStart
+        is guest creation, periodEnd is the absolute lifetime deadline, personalLimitUsd
+        is the lifetime allowance and spentUsd/reservedUsd cover the entire guest
+        lifetime. unresolvedPriorUsd is zero because all guest reservations are already
+        counted in reservedUsd across months. availableUsd is remaining lifetime
+        allowance; canGenerate additionally checks undisclosed global and monthly
+        guest-pool capacity and guest policy. Neither shared pool amounts nor other
+        users' usage is exposed. All amounts use nine-decimal USD strings. A balance
+        snapshot is not a reservation or a guarantee that another call fits.
     CreateRequest:
       description: For a new turn content is required and nonblank, retryOf is absent.
         For a retry retryOf is required and content must be absent; it references
