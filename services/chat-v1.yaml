@@ -226,7 +226,14 @@ paths:
       operationId: deleteConversation
       tags:
       - ChatConversations
-      summary: Delete content; reject active or execution-uncertain requests
+      summary: Delete conversation content while preserving financial and execution evidence
+      description: >-
+        Reject active or financially unresolved requests. An execution-unconfirmed UNKNOWN
+        or CANCEL_REQUESTED request no longer prevents deletion when its accounting and
+        reservation are SETTLED, it has no user slot, and both its generation deadline plus
+        30 seconds and dispatch lease have expired. Fence late content writes before
+        deleting. Preserve the final charge, request/dispatch records and unconfirmed
+        execution evidence; elapsed time is not proof of provider completion.
       responses:
         '204':
           description: Success
