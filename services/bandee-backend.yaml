@@ -8,6 +8,8 @@ paths:
     $ref: './google-drive.yaml#/paths/~1api~1drive'
   /api/drive/preview:
     $ref: './google-drive.yaml#/paths/~1api~1drive~1preview'
+  /api/drive/import:
+    $ref: './google-drive.yaml#/paths/~1api~1drive~1import'
   /api/drive/disconnect:
     $ref: './google-drive.yaml#/paths/~1api~1drive~1disconnect'
   /api/account-deletion/options:
@@ -143,6 +145,10 @@ components:
       $ref: './google-drive.yaml#/components/schemas/DriveFolderConfirmation'
     DriveCloudConsent:
       $ref: './google-drive.yaml#/components/schemas/DriveCloudConsent'
+    DriveImportConsent:
+      $ref: './google-drive.yaml#/components/schemas/DriveImportConsent'
+    DriveIndexStatus:
+      $ref: './google-drive.yaml#/components/schemas/DriveIndexStatus'
     DriveDisconnect:
       $ref: './google-drive.yaml#/components/schemas/DriveDisconnect'
     DriveSearchState:

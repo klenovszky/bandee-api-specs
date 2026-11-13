@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: Bandee Google Drive pilot
-  version: 1.0.0
+  title: Bandee Google Drive integration
+  version: 1.1.0
 security:
   - browserSession: []
 paths:
@@ -33,11 +33,13 @@ paths:
     put:
       tags: [GoogleDrive]
       operationId: connectDriveFolder
-      summary: Confirm a previously previewed folder and its separate cloud permission
+      summary: Confirm a folder with separate local import and cloud permissions
       description: >-
         The server revalidates the folder, preview token, account and expected version.
         Replacement invalidates in-flight work and excludes old derived history from
-        future model contexts. Drive tokens never leave the backend.
+        future model contexts. Local text/vector storage requires importConsent;
+        existing connections are not silently opted in. Credentials remain in the
+        trusted backend/worker services. Confirmation schedules asynchronous work.
       parameters:
         - { $ref: '#/components/parameters/Csrf' }
       requestBody:
@@ -96,6 +98,35 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DriveConnection' }
+  /api/drive/import:
+    patch:
+      tags: [GoogleDrive]
+      operationId: setDriveImportConsent
+      summary: Grant or revoke persistent local text and vector indexing
+      description: >-
+        Granting consent schedules background processing independently of Gemini
+        consent. Revocation immediately fences retrieval and running work, and
+        queues removal of locally indexed text and vectors. Original Drive files
+        are never changed. expectedVersion provides account-bound concurrency control.
+      parameters:
+        - { $ref: '#/components/parameters/Csrf' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DriveImportConsent' }
+      responses:
+        '200':
+          description: Permission updated; processing or cleanup continues asynchronously
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriveConnection' }
+        '400': { $ref: '#/components/responses/DriveProblem' }
+        '401': { $ref: '#/components/responses/DriveProblem' }
+        '403': { $ref: '#/components/responses/DriveProblem' }
+        '409': { $ref: '#/components/responses/DriveProblem' }
+        '429': { $ref: '#/components/responses/DriveProblem' }
+        '503': { $ref: '#/components/responses/DriveProblem' }
   /api/drive/preview:
     post:
       tags: [GoogleDrive]
@@ -139,6 +170,8 @@ paths:
         count includes every conversation marked before source-bearing countTokens calls,
         including failed or incomplete replies. Repeated requests with the same disconnected
         version are safe. Google sharing must be revoked separately in Drive.
+        Local indexed text and vectors are always removed; deleteConversations
+        controls the separate conversation history choice only.
       parameters:
         - { $ref: '#/components/parameters/Csrf' }
       requestBody:
@@ -192,6 +225,8 @@ components:
         folderName: { type: string, maxLength: 500 }
         version: { type: integer, format: int64, minimum: 0 }
         cloudConsent: { type: boolean }
+        importConsent: { type: boolean, default: false }
+        index: { $ref: '#/components/schemas/DriveIndexStatus' }
         affectedConversations: { type: integer, minimum: 0 }
         deletionPending: { type: boolean }
         problem: { $ref: './chat-v1.yaml#/components/schemas/Problem' }
@@ -218,6 +253,33 @@ components:
         previewToken: { type: string, format: uuid }
         expectedVersion: { type: integer, format: int64, minimum: 0 }
         cloudConsent: { type: boolean }
+        importConsent:
+          type: boolean
+          default: false
+          description: Explicit permission for persistent local extracted text and vectors; omission means false
+    DriveImportConsent:
+      type: object
+      additionalProperties: false
+      required: [expectedVersion, importConsent]
+      properties:
+        expectedVersion: { type: integer, format: int64, minimum: 0 }
+        importConsent: { type: boolean }
+    DriveIndexStatus:
+      type: object
+      additionalProperties: false
+      required: [state, readyFiles, pendingFiles, skippedFiles, failedFiles]
+      description: Account-scoped background processing metadata; contains no document text or credentials
+      properties:
+        state:
+          type: string
+          enum: [DISABLED, PENDING, SYNCING, READY, PARTIAL, STALE, ERROR]
+        readyFiles: { type: integer, minimum: 0 }
+        pendingFiles: { type: integer, minimum: 0 }
+        skippedFiles: { type: integer, minimum: 0 }
+        failedFiles: { type: integer, minimum: 0 }
+        lastCheckedAt: { type: string, format: date-time }
+        lastIndexedAt: { type: string, format: date-time }
+        problem: { $ref: './chat-v1.yaml#/components/schemas/Problem' }
     DriveCloudConsent:
       type: object
       additionalProperties: false
@@ -234,7 +296,7 @@ components:
         deleteConversations: { type: boolean }
     DriveSearchState:
       type: string
-      enum: [NOT_USED, SEARCHING, FOUND, NO_MATCH, PARTIAL, ACCESS_LOST, UNAVAILABLE, OCR_REQUIRED]
+      enum: [NOT_USED, SEARCHING, FOUND, NO_MATCH, PARTIAL, ACCESS_LOST, UNAVAILABLE, OCR_REQUIRED, INDEX_PENDING, INDEX_STALE]
     DriveSource:
       type: object
       additionalProperties: false
