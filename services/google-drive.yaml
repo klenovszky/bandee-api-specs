@@ -11,6 +11,20 @@ paths:
       operationId: getDriveConnection
       summary: Read the current account's Drive pilot settings, never cached
       responses:
+        '400':
+          $ref: '#/components/responses/DriveProblem'
+        '401':
+          $ref: '#/components/responses/DriveProblem'
+        '403':
+          $ref: '#/components/responses/DriveProblem'
+        '404':
+          $ref: '#/components/responses/DriveProblem'
+        '409':
+          $ref: '#/components/responses/DriveProblem'
+        '429':
+          $ref: '#/components/responses/DriveProblem'
+        '503':
+          $ref: '#/components/responses/DriveProblem'
         '200':
           description: Only the configured, active registered pilot account is eligible
           content:
@@ -32,6 +46,20 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/DriveFolderConfirmation' }
       responses:
+        '400':
+          $ref: '#/components/responses/DriveProblem'
+        '401':
+          $ref: '#/components/responses/DriveProblem'
+        '403':
+          $ref: '#/components/responses/DriveProblem'
+        '404':
+          $ref: '#/components/responses/DriveProblem'
+        '409':
+          $ref: '#/components/responses/DriveProblem'
+        '429':
+          $ref: '#/components/responses/DriveProblem'
+        '503':
+          $ref: '#/components/responses/DriveProblem'
         '200':
           description: Folder confirmed
           content:
@@ -49,6 +77,20 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/DriveCloudConsent' }
       responses:
+        '400':
+          $ref: '#/components/responses/DriveProblem'
+        '401':
+          $ref: '#/components/responses/DriveProblem'
+        '403':
+          $ref: '#/components/responses/DriveProblem'
+        '404':
+          $ref: '#/components/responses/DriveProblem'
+        '409':
+          $ref: '#/components/responses/DriveProblem'
+        '429':
+          $ref: '#/components/responses/DriveProblem'
+        '503':
+          $ref: '#/components/responses/DriveProblem'
         '200':
           description: Permission updated
           content:
@@ -67,6 +109,20 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/DriveFolderInput' }
       responses:
+        '400':
+          $ref: '#/components/responses/DriveProblem'
+        '401':
+          $ref: '#/components/responses/DriveProblem'
+        '403':
+          $ref: '#/components/responses/DriveProblem'
+        '404':
+          $ref: '#/components/responses/DriveProblem'
+        '409':
+          $ref: '#/components/responses/DriveProblem'
+        '429':
+          $ref: '#/components/responses/DriveProblem'
+        '503':
+          $ref: '#/components/responses/DriveProblem'
         '200':
           description: Account-bound preview valid for five minutes; not connected yet
           content:
@@ -91,12 +147,32 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/DriveDisconnect' }
       responses:
+        '400':
+          $ref: '#/components/responses/DriveProblem'
+        '401':
+          $ref: '#/components/responses/DriveProblem'
+        '403':
+          $ref: '#/components/responses/DriveProblem'
+        '404':
+          $ref: '#/components/responses/DriveProblem'
+        '409':
+          $ref: '#/components/responses/DriveProblem'
+        '429':
+          $ref: '#/components/responses/DriveProblem'
+        '503':
+          $ref: '#/components/responses/DriveProblem'
         '200':
           description: Disconnected; durable deletion continues until safe completion
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DriveConnection' }
 components:
+  responses:
+    DriveProblem:
+      description: Sanitized failure with a stable code, processing stage and request ID; never retried automatically
+      content:
+        application/json:
+          schema: { $ref: './chat-v1.yaml#/components/schemas/Problem' }
   securitySchemes:
     browserSession: { type: apiKey, in: cookie, name: BANDEE_SESSION }
   parameters:
