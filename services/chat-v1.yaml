@@ -1226,6 +1226,12 @@ components:
           - PROVIDER_FAILURE
           - OUTCOME_UNCERTAIN
           - REQUEST_EXPIRED
+          - DRIVE_UNAVAILABLE
+          - DRIVE_ACCESS_LOST
+          - DRIVE_CHANGED
+          - DRIVE_LIMIT
+          - DRIVE_CONFIGURATION
+          - DRIVE_CONSENT_REQUIRED
           - INTERNAL_ERROR
         message:
           type: string
@@ -1263,6 +1269,13 @@ components:
       type: object
       additionalProperties: false
       properties:
+        driveSearchState:
+          $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
+        driveSources:
+          type: array
+          maxItems: 3
+          items:
+            $ref: './google-drive.yaml#/components/schemas/DriveSource'
         id:
           type: string
           format: uuid
@@ -1300,6 +1313,13 @@ components:
       type: object
       additionalProperties: false
       properties:
+        driveSearchState:
+          $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
+        driveSources:
+          type: array
+          maxItems: 3
+          items:
+            $ref: './google-drive.yaml#/components/schemas/DriveSource'
         purpose:
           type: string
           enum: [CHAT, VOICE_REVIEW, FIRST_TITLE]

@@ -4,6 +4,12 @@ info:
   description: "REST API specification for the Bandee backend service."
   version: "0.0.1-SNAPSHOT"
 paths:
+  /api/drive:
+    $ref: './google-drive.yaml#/paths/~1api~1drive'
+  /api/drive/preview:
+    $ref: './google-drive.yaml#/paths/~1api~1drive~1preview'
+  /api/drive/disconnect:
+    $ref: './google-drive.yaml#/paths/~1api~1drive~1disconnect'
   /api/account-deletion/options:
     $ref: './account-deletion.yaml#/paths/~1api~1account-deletion~1options'
   /api/account-deletion/intents:
@@ -127,6 +133,22 @@ components:
       in: cookie
       name: BANDEE_SESSION
   schemas:
+    DriveConnection:
+      $ref: './google-drive.yaml#/components/schemas/DriveConnection'
+    DriveFolderInput:
+      $ref: './google-drive.yaml#/components/schemas/DriveFolderInput'
+    DriveFolderPreview:
+      $ref: './google-drive.yaml#/components/schemas/DriveFolderPreview'
+    DriveFolderConfirmation:
+      $ref: './google-drive.yaml#/components/schemas/DriveFolderConfirmation'
+    DriveCloudConsent:
+      $ref: './google-drive.yaml#/components/schemas/DriveCloudConsent'
+    DriveDisconnect:
+      $ref: './google-drive.yaml#/components/schemas/DriveDisconnect'
+    DriveSearchState:
+      $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
+    DriveSource:
+      $ref: './google-drive.yaml#/components/schemas/DriveSource'
     CreateInputAnalysis:
       $ref: "./chat-v1.yaml#/components/schemas/CreateInputAnalysis"
     InputAnalysisResult:

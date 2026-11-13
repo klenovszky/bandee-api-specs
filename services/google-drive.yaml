@@ -1,0 +1,171 @@
+openapi: 3.0.3
+info:
+  title: Bandee Google Drive pilot
+  version: 1.0.0
+security:
+  - browserSession: []
+paths:
+  /api/drive:
+    get:
+      tags: [GoogleDrive]
+      operationId: getDriveConnection
+      summary: Read the current account's Drive pilot settings, never cached
+      responses:
+        '200':
+          description: Only the configured, active registered pilot account is eligible
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriveConnection' }
+    put:
+      tags: [GoogleDrive]
+      operationId: connectDriveFolder
+      summary: Confirm a previously previewed folder and its separate cloud permission
+      description: >-
+        The server revalidates the folder, preview token, account and expected version.
+        Replacement invalidates in-flight work and excludes old derived history from
+        future model contexts. Drive tokens never leave the backend.
+      parameters:
+        - { $ref: '#/components/parameters/Csrf' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DriveFolderConfirmation' }
+      responses:
+        '200':
+          description: Folder confirmed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriveConnection' }
+    patch:
+      tags: [GoogleDrive]
+      operationId: setDriveCloudConsent
+      summary: Change the separate Gemini permission, fencing pending requests
+      parameters:
+        - { $ref: '#/components/parameters/Csrf' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DriveCloudConsent' }
+      responses:
+        '200':
+          description: Permission updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriveConnection' }
+  /api/drive/preview:
+    post:
+      tags: [GoogleDrive]
+      operationId: previewDriveFolder
+      summary: Validate a recognized Drive folder URL without fetching that URL
+      parameters:
+        - { $ref: '#/components/parameters/Csrf' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DriveFolderInput' }
+      responses:
+        '200':
+          description: Account-bound preview valid for five minutes; not connected yet
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriveFolderPreview' }
+  /api/drive/disconnect:
+    post:
+      tags: [GoogleDrive]
+      operationId: disconnectDriveFolder
+      summary: Invalidate the folder immediately and optionally queue complete conversation erasure
+      description: >-
+        Works while the feature switch is off. Preserved conversations remain readable
+        but their derived content and titles cannot be sent to Gemini again. The affected
+        count includes every conversation marked before source-bearing countTokens calls,
+        including failed or incomplete replies. Repeated requests with the same disconnected
+        version are safe. Google sharing must be revoked separately in Drive.
+      parameters:
+        - { $ref: '#/components/parameters/Csrf' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DriveDisconnect' }
+      responses:
+        '200':
+          description: Disconnected; durable deletion continues until safe completion
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriveConnection' }
+components:
+  securitySchemes:
+    browserSession: { type: apiKey, in: cookie, name: BANDEE_SESSION }
+  parameters:
+    Csrf: { in: header, name: X-CSRF-TOKEN, required: true, schema: { type: string } }
+  schemas:
+    DriveConnection:
+      type: object
+      additionalProperties: false
+      required: [eligible, enabled, connected, available, version, cloudConsent, affectedConversations, deletionPending]
+      properties:
+        eligible: { type: boolean }
+        enabled: { type: boolean }
+        connected: { type: boolean }
+        available: { type: boolean }
+        serviceAccountEmail: { type: string, maxLength: 254 }
+        folderId: { type: string }
+        folderName: { type: string, maxLength: 500 }
+        version: { type: integer, format: int64, minimum: 0 }
+        cloudConsent: { type: boolean }
+        affectedConversations: { type: integer, minimum: 0 }
+        deletionPending: { type: boolean }
+        problem: { $ref: './chat-v1.yaml#/components/schemas/Problem' }
+    DriveFolderInput:
+      type: object
+      additionalProperties: false
+      required: [folderUrl]
+      properties:
+        folderUrl: { type: string, minLength: 1, maxLength: 2048 }
+    DriveFolderPreview:
+      type: object
+      additionalProperties: false
+      required: [folderId, folderName, previewToken, expectedVersion]
+      properties:
+        folderId: { type: string }
+        folderName: { type: string, maxLength: 500 }
+        previewToken: { type: string, format: uuid }
+        expectedVersion: { type: integer, format: int64 }
+    DriveFolderConfirmation:
+      type: object
+      additionalProperties: false
+      required: [previewToken, expectedVersion, cloudConsent]
+      properties:
+        previewToken: { type: string, format: uuid }
+        expectedVersion: { type: integer, format: int64, minimum: 0 }
+        cloudConsent: { type: boolean }
+    DriveCloudConsent:
+      type: object
+      additionalProperties: false
+      required: [expectedVersion, cloudConsent]
+      properties:
+        expectedVersion: { type: integer, format: int64, minimum: 0 }
+        cloudConsent: { type: boolean }
+    DriveDisconnect:
+      type: object
+      additionalProperties: false
+      required: [expectedVersion, deleteConversations]
+      properties:
+        expectedVersion: { type: integer, format: int64, minimum: 0 }
+        deleteConversations: { type: boolean }
+    DriveSearchState:
+      type: string
+      enum: [NOT_USED, SEARCHING, FOUND, NO_MATCH, PARTIAL, ACCESS_LOST, UNAVAILABLE, OCR_REQUIRED]
+    DriveSource:
+      type: object
+      additionalProperties: false
+      required: [id, fileName, fileVersion]
+      description: Server-issued and verified provenance only; no extracted text or credentials
+      properties:
+        id: { type: string, format: uuid }
+        fileName: { type: string, maxLength: 500 }
+        fileVersion: { type: string, maxLength: 100 }
+        page: { type: integer, minimum: 1 }
