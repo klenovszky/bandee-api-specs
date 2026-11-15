@@ -14,6 +14,42 @@ tags:
 - name: AiGeneration
 - name: AiInternalStreams
 paths:
+  /internal/ai/capabilities:
+    get:
+      operationId: getModelCapabilities
+      tags:
+      - AiPreparation
+      summary: Read the assistant's currently verified execution profile
+      description: Returns the current unexpired profile without processing user
+        content or invoking generation. A missing, expired, or unverifiable
+        profile returns AI_UNAVAILABLE.
+      responses:
+        '200':
+          description: Verified provider capabilities and application transport limits
+          headers:
+            Cache-Control:
+              description: The response must not be stored by HTTP caches.
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelCapabilities'
+        '401':
+          description: Missing or invalid service authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: No verified profile is available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      security:
+      - serviceBearer: []
   /internal/ai/prepare:
     post:
       operationId: prepareGeneration
@@ -290,6 +326,82 @@ components:
       type: http
       scheme: bearer
   schemas:
+    ModelCapabilities:
+      type: object
+      additionalProperties: false
+      description: A versioned snapshot for one configured model and LOW thinking.
+        Each execution limit must be verified independently. The backend additionally
+        applies its own lower transport limits and owns prices and monetary policy.
+      required:
+      - schemaVersion
+      - profileHash
+      - model
+      - modelRevision
+      - providerInputTokenLimit
+      - providerOutputTokenLimit
+      - maxInputTokens
+      - maxOutputTokens
+      - billableOutputTokenUpperBound
+      - thinkingMode
+      - maxPrepareRequestBytes
+      - maxGeneratedTextBytes
+      - verifiedAt
+      - expiresAt
+      properties:
+        schemaVersion:
+          type: integer
+          enum: [1]
+        profileHash:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+          description: Lowercase SHA-256 over RFC 8785 canonical JSON of all
+            other properties in this object. Omit absent optional properties.
+        model:
+          type: string
+        modelRevision:
+          type: string
+        providerInputTokenLimit:
+          type: integer
+          minimum: 1
+        providerOutputTokenLimit:
+          type: integer
+          minimum: 1
+        providerCombinedTokenLimit:
+          type: integer
+          minimum: 1
+          description: Include only when the provider's combined input/output
+            constraint has been verified for this model and endpoint.
+        maxInputTokens:
+          type: integer
+          minimum: 1
+          description: Maximum counted input accepted by the application profile.
+        maxOutputTokens:
+          type: integer
+          minimum: 1
+          description: Largest output setting accepted by the application profile.
+        billableOutputTokenUpperBound:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Conservative upper bound on all billed output and thinking
+            tokens together, for any output setting allowed by this profile.
+        thinkingMode:
+          type: string
+          enum: [LOW]
+        maxPrepareRequestBytes:
+          type: integer
+          minimum: 1
+          description: Maximum UTF-8 JSON body size for preparation in bytes.
+        maxGeneratedTextBytes:
+          type: integer
+          minimum: 1
+          description: Maximum aggregate UTF-8 generated text size per dispatch in bytes.
+        verifiedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
     Problem:
       type: object
       additionalProperties: false
@@ -368,6 +480,11 @@ components:
           type: string
         contextHash:
           type: string
+        profileHash:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+          description: Required for capability-aware callers. The assistant must
+            reject an expired or mismatched profile before token counting.
         messages:
           type: array
           items:
@@ -392,7 +509,8 @@ components:
       - deadline
       description: Token counting and validation only, never generation. Context hash
         is SHA-256 over RFC 8785 canonical JSON of model, systemPromptVersion, messages,
-        maxOutputTokens, thinkingMode and responseLanguage. The plan binds these exact values. Enforce
+        maxOutputTokens, thinkingMode, responseLanguage and profileHash when supplied.
+        The plan binds these exact values. Enforce
         size and deadline limits; tools/caching/multiple candidates are forbidden
         in V1. The backend supplies a SYSTEM message selecting this language before
         token counting; the assistant validates the language instruction and retains
@@ -407,6 +525,11 @@ components:
           type: string
         contextHash:
           type: string
+        profileHash:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+          description: Echo the exact verified profile when supplied at preparation.
+            Its expiry also limits the lifetime of the dispatch plan.
         modelRevision:
           type: string
         inputTokens:

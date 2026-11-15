@@ -4,6 +4,8 @@ info:
   description: "REST API specification for the Bandee assistant service."
   version: "0.0.1-SNAPSHOT"
 paths:
+  /internal/ai/capabilities:
+    $ref: "./chat-v1.yaml#/paths/~1internal~1ai~1capabilities"
   /internal/ai/prepare:
     $ref: "./chat-v1.yaml#/paths/~1internal~1ai~1prepare"
   /internal/ai/generations/{requestId}:
@@ -22,6 +24,8 @@ components:
       $ref: "./chat-v1.yaml#/components/schemas/ExecutionState"
     ContextMessage:
       $ref: "./chat-v1.yaml#/components/schemas/ContextMessage"
+    ModelCapabilities:
+      $ref: "./chat-v1.yaml#/components/schemas/ModelCapabilities"
     PrepareGeneration:
       $ref: "./chat-v1.yaml#/components/schemas/PrepareGeneration"
     PreparedGeneration:
