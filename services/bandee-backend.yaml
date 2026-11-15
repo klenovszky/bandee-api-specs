@@ -124,6 +124,8 @@ paths:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}"
   /api/chat/requests/{requestId}/stream:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1stream"
+  /api/chat/requests/{requestId}/drive-sources:
+    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1drive-sources"
   /api/chat/requests/{requestId}/start:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1start"
   /api/chat/requests/{requestId}/cancel:
@@ -163,6 +165,8 @@ components:
       $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
     DriveSource:
       $ref: './google-drive.yaml#/components/schemas/DriveSource'
+    ChatDriveSourcePage:
+      $ref: './chat-v1.yaml#/components/schemas/ChatDriveSourcePage'
     CreateInputAnalysis:
       $ref: "./chat-v1.yaml#/components/schemas/CreateInputAnalysis"
     InputAnalysisResult:

@@ -880,6 +880,43 @@ paths:
       security:
       - browserSession: [
           ]
+  /api/chat/requests/{requestId}/drive-sources:
+    get:
+      operationId: listChatDriveSources
+      tags: [ChatRequests]
+      summary: List the Drive sources cited in this answer
+      description: The cursor belongs to this answer and account. The response includes citation metadata only.
+      security:
+        - browserSession: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: cursor
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: One page of cited Drive sources
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChatDriveSourcePage' }
+        '400':
+          description: Invalid cursor
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '401':
+          description: Session required
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '404':
+          description: Request unavailable to the current account
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
   /api/chat/requests/{requestId}/stream:
     get:
       operationId: readChatStream
@@ -1273,9 +1310,11 @@ components:
           $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
         driveSources:
           type: array
-          maxItems: 3
+          description: First page of cited Drive sources
           items:
             $ref: './google-drive.yaml#/components/schemas/DriveSource'
+        driveSourceTotal: { type: integer, format: int64, minimum: 0 }
+        driveSourcesNextCursor: { type: string, format: uuid }
         id:
           type: string
           format: uuid
@@ -1317,9 +1356,11 @@ components:
           $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
         driveSources:
           type: array
-          maxItems: 3
+          description: First page of cited Drive sources
           items:
             $ref: './google-drive.yaml#/components/schemas/DriveSource'
+        driveSourceTotal: { type: integer, format: int64, minimum: 0 }
+        driveSourcesNextCursor: { type: string, format: uuid }
         purpose:
           type: string
           enum: [CHAT, VOICE_REVIEW, FIRST_TITLE]
@@ -1405,6 +1446,16 @@ components:
         after actual content deletion. Reading a request never triggers generation.
         Unknown execution and uncertain accounting are separate concepts.
         responseLanguage is the immutable language accepted for this request, including after restart or content deletion.
+    ChatDriveSourcePage:
+      type: object
+      additionalProperties: false
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items: { $ref: './google-drive.yaml#/components/schemas/DriveSource' }
+        total: { type: integer, format: int64, minimum: 0 }
+        nextCursor: { type: string, format: uuid }
     OwnBudget:
       type: object
       additionalProperties: false
