@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Bandee Google Drive integration
-  version: 1.1.0
+  version: 1.2.0
 security:
   - browserSession: []
 paths:
@@ -126,6 +126,28 @@ paths:
         '403': { $ref: '#/components/responses/DriveProblem' }
         '409': { $ref: '#/components/responses/DriveProblem' }
         '429': { $ref: '#/components/responses/DriveProblem' }
+        '503': { $ref: '#/components/responses/DriveProblem' }
+  /api/drive/documents:
+    get:
+      tags: [GoogleDrive]
+      operationId: listDriveDocuments
+      summary: Read a page of document processing states for the active import
+      description: The cursor is bound to the current account and connection generation. No content or resource keys are returned.
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Document status page; results may change while the index runs
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriveDocumentPage' }
+        '400': { $ref: '#/components/responses/DriveProblem' }
+        '401': { $ref: '#/components/responses/DriveProblem' }
+        '403': { $ref: '#/components/responses/DriveProblem' }
+        '404': { $ref: '#/components/responses/DriveProblem' }
+        '409': { $ref: '#/components/responses/DriveProblem' }
         '503': { $ref: '#/components/responses/DriveProblem' }
   /api/drive/preview:
     post:
@@ -273,13 +295,45 @@ components:
         state:
           type: string
           enum: [DISABLED, PENDING, SYNCING, READY, PARTIAL, STALE, ERROR]
-        readyFiles: { type: integer, minimum: 0 }
-        pendingFiles: { type: integer, minimum: 0 }
-        skippedFiles: { type: integer, minimum: 0 }
-        failedFiles: { type: integer, minimum: 0 }
+        readyFiles: { type: integer, format: int64, minimum: 0 }
+        pendingFiles: { type: integer, format: int64, minimum: 0 }
+        skippedFiles: { type: integer, format: int64, minimum: 0 }
+        failedFiles: { type: integer, format: int64, minimum: 0 }
+        scan: { $ref: '#/components/schemas/DriveScanStatus' }
         lastCheckedAt: { type: string, format: date-time }
         lastIndexedAt: { type: string, format: date-time }
         problem: { $ref: './chat-v1.yaml#/components/schemas/Problem' }
+    DriveScanStatus:
+      type: object
+      additionalProperties: false
+      required: [phase, discoveredFiles, checkedFolders, startedAt]
+      properties:
+        phase: { type: string, enum: [DISCOVERING, RECONCILING, COMPLETED, FAILED] }
+        discoveredFiles: { type: integer, format: int64, minimum: 0 }
+        checkedFolders: { type: integer, format: int64, minimum: 0 }
+        startedAt: { type: string, format: date-time }
+        finishedAt: { type: string, format: date-time }
+    DriveDocumentStatus:
+      type: object
+      additionalProperties: false
+      required: [id, fileName, state, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        fileName: { type: string, maxLength: 500 }
+        state: { type: string, enum: [PENDING, READY, SKIPPED, FAILED] }
+        updatedAt: { type: string, format: date-time }
+        reason:
+          type: string
+          enum: [OCR_REQUIRED, ACCESS_LOST, DOCUMENT_LIMIT, STORAGE_PRESSURE, PROCESSING_UNAVAILABLE]
+    DriveDocumentPage:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/DriveDocumentStatus' }
+        nextCursor: { type: string, format: uuid }
     DriveCloudConsent:
       type: object
       additionalProperties: false

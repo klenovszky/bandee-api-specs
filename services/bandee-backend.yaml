@@ -10,6 +10,8 @@ paths:
     $ref: './google-drive.yaml#/paths/~1api~1drive~1preview'
   /api/drive/import:
     $ref: './google-drive.yaml#/paths/~1api~1drive~1import'
+  /api/drive/documents:
+    $ref: './google-drive.yaml#/paths/~1api~1drive~1documents'
   /api/drive/disconnect:
     $ref: './google-drive.yaml#/paths/~1api~1drive~1disconnect'
   /api/account-deletion/options:
@@ -149,6 +151,12 @@ components:
       $ref: './google-drive.yaml#/components/schemas/DriveImportConsent'
     DriveIndexStatus:
       $ref: './google-drive.yaml#/components/schemas/DriveIndexStatus'
+    DriveScanStatus:
+      $ref: './google-drive.yaml#/components/schemas/DriveScanStatus'
+    DriveDocumentStatus:
+      $ref: './google-drive.yaml#/components/schemas/DriveDocumentStatus'
+    DriveDocumentPage:
+      $ref: './google-drive.yaml#/components/schemas/DriveDocumentPage'
     DriveDisconnect:
       $ref: './google-drive.yaml#/components/schemas/DriveDisconnect'
     DriveSearchState:
