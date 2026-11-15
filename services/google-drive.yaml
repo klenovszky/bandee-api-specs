@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Bandee Google Drive integration
-  version: 1.2.0
+  version: 1.3.0
 security:
   - browserSession: []
 paths:
@@ -127,16 +127,48 @@ paths:
         '409': { $ref: '#/components/responses/DriveProblem' }
         '429': { $ref: '#/components/responses/DriveProblem' }
         '503': { $ref: '#/components/responses/DriveProblem' }
+  /api/drive/processing:
+    get:
+      tags: [GoogleDrive]
+      operationId: getDriveProcessingStatus
+      summary: Read current Drive background processing status and schedule
+      responses:
+        '200':
+          description: Account-scoped processing snapshot
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriveProcessingStatus' }
+        '401': { $ref: '#/components/responses/DriveProblem' }
+        '403': { $ref: '#/components/responses/DriveProblem' }
+        '503': { $ref: '#/components/responses/DriveProblem' }
   /api/drive/documents:
     get:
       tags: [GoogleDrive]
       operationId: listDriveDocuments
       summary: Read a page of document processing states for the active import
-      description: The cursor is bound to the current account and connection generation. No content or resource keys are returned.
+      description: Paging is scoped to the current account and import generation. Use the opaque token with the same filters and order. The legacy UUID cursor is available for unfiltered UUID-ordered requests.
       parameters:
         - in: query
           name: cursor
           schema: { type: string, format: uuid }
+        - in: query
+          name: pageToken
+          schema: { type: string, maxLength: 4096 }
+        - in: query
+          name: search
+          schema: { type: string, maxLength: 200 }
+        - in: query
+          name: state
+          schema: { type: string, enum: [PENDING, READY, SKIPPED, FAILED] }
+        - in: query
+          name: fileType
+          schema: { type: string, enum: [PDF, GOOGLE_DOC, OTHER] }
+        - in: query
+          name: sort
+          schema: { type: string, enum: [FILE_NAME, STATE, UPDATED_AT] }
+        - in: query
+          name: direction
+          schema: { type: string, enum: [ASC, DESC] }
       responses:
         '200':
           description: Document status page; results may change while the index runs
@@ -148,6 +180,26 @@ paths:
         '403': { $ref: '#/components/responses/DriveProblem' }
         '404': { $ref: '#/components/responses/DriveProblem' }
         '409': { $ref: '#/components/responses/DriveProblem' }
+        '503': { $ref: '#/components/responses/DriveProblem' }
+  /api/drive/documents/{documentId}:
+    get:
+      tags: [GoogleDrive]
+      operationId: getDriveDocumentStatus
+      summary: Read processing details for a document in the active import
+      parameters:
+        - in: path
+          name: documentId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Document processing details without document content or resource keys
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriveDocumentStatus' }
+        '401': { $ref: '#/components/responses/DriveProblem' }
+        '403': { $ref: '#/components/responses/DriveProblem' }
+        '404': { $ref: '#/components/responses/DriveProblem' }
         '503': { $ref: '#/components/responses/DriveProblem' }
   /api/drive/preview:
     post:
@@ -322,6 +374,13 @@ components:
         fileName: { type: string, maxLength: 500 }
         state: { type: string, enum: [PENDING, READY, SKIPPED, FAILED] }
         updatedAt: { type: string, format: date-time }
+        fileType: { type: string, enum: [PDF, GOOGLE_DOC, OTHER] }
+        reindexing: { type: boolean }
+        progress: { $ref: '#/components/schemas/DriveProcessingProgress' }
+        lastAttemptAt: { type: string, format: date-time }
+        nextRetryAt: { type: string, format: date-time }
+        indexedAt: { type: string, format: date-time }
+        problem: { $ref: './chat-v1.yaml#/components/schemas/Problem' }
         reason:
           type: string
           enum: [OCR_REQUIRED, ACCESS_LOST, DOCUMENT_LIMIT, STORAGE_PRESSURE, PROCESSING_UNAVAILABLE]
@@ -334,6 +393,41 @@ components:
           type: array
           items: { $ref: '#/components/schemas/DriveDocumentStatus' }
         nextCursor: { type: string, format: uuid }
+        nextPageToken: { type: string, maxLength: 4096 }
+        total: { type: integer, format: int64, minimum: 0 }
+    DriveProcessingStatus:
+      type: object
+      additionalProperties: false
+      required: [workerState, index, observedAt, queuedJobs, delayedJobs]
+      properties:
+        workerState: { type: string, enum: [WORKING, WAITING, PAUSED, UNREACHABLE, UNKNOWN] }
+        index: { $ref: '#/components/schemas/DriveIndexStatus' }
+        observedAt: { type: string, format: date-time }
+        lastHeartbeatAt: { type: string, format: date-time }
+        lastProgressAt: { type: string, format: date-time }
+        nextScanAt: { type: string, format: date-time }
+        nextRetryAt: { type: string, format: date-time }
+        queuedJobs: { type: integer, format: int64, minimum: 0 }
+        delayedJobs: { type: integer, format: int64, minimum: 0 }
+        activeWork: { $ref: '#/components/schemas/DriveProcessingProgress' }
+        waitingProblem: { $ref: './chat-v1.yaml#/components/schemas/Problem' }
+    DriveProcessingProgress:
+      type: object
+      additionalProperties: false
+      required: [stage, active]
+      properties:
+        stage: { type: string, enum: [DISCOVERING, RECONCILING, CHECKING_FILE, DOWNLOADING, VERIFYING_DOWNLOAD, INDEXING, CLEANING_UP] }
+        active: { type: boolean }
+        documentId: { type: string, format: uuid }
+        fileName: { type: string, maxLength: 500 }
+        startedAt: { type: string, format: date-time }
+        checkpointAt: { type: string, format: date-time }
+        downloadedBytes: { type: integer, format: int64, minimum: 0 }
+        totalBytes: { type: integer, format: int64, minimum: 0 }
+        pagesProcessed: { type: integer, format: int32, minimum: 0 }
+        totalPages: { type: integer, format: int32, minimum: 1 }
+        passages: { type: integer, format: int64, minimum: 0 }
+        textlessPages: { type: integer, format: int32, minimum: 0 }
     DriveCloudConsent:
       type: object
       additionalProperties: false
