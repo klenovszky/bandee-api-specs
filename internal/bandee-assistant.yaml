@@ -10,6 +10,8 @@ paths:
     $ref: "./chat-v1.yaml#/paths/~1internal~1ai~1prepare"
   /internal/ai/generations/{requestId}:
     $ref: "./chat-v1.yaml#/paths/~1internal~1ai~1generations~1{requestId}"
+  /internal/ai/generations/{requestId}/detach:
+    $ref: "./chat-v1.yaml#/paths/~1internal~1ai~1generations~1{requestId}~1detach"
 components:
   securitySchemes:
     serviceBearer:

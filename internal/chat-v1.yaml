@@ -247,6 +247,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
+      - { name: X-Dispatch-Token, in: header, required: false, schema: { type: string, format: uuid } }
+      - { name: X-Assistant-Instance-ID, in: header, required: false, schema: { type: string, format: uuid } }
       - name: requestId
         in: path
         required: true
@@ -311,6 +313,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
+      - { name: X-Dispatch-Token, in: header, required: false, schema: { type: string, format: uuid } }
+      - { name: X-Assistant-Instance-ID, in: header, required: false, schema: { type: string, format: uuid } }
       - name: requestId
         in: path
         required: true
@@ -320,6 +324,35 @@ paths:
       security:
       - serviceBearer: [
           ]
+  /internal/ai/generations/{requestId}/detach:
+    post:
+      operationId: detachGeneration
+      tags: [AiGeneration]
+      summary: Keep the original bounded execution alive for content-free final usage
+      description: Authenticated opt-in after durable user Stop. Idempotent for the same
+        request, dispatch token and assistant instance. Acknowledgement allows provider
+        execution to survive internal transport loss until its ORIGINAL deadline and
+        limits. Discard all subsequent content, retain final usage until deadline plus
+        ten minutes. No new invocation, deadline extension or capacity exemption.
+        A restart loses process-local evidence; absent evidence never proves zero cost.
+      parameters:
+      - { name: requestId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: X-Dispatch-Token, in: header, required: true, schema: { type: string, format: uuid } }
+      - { name: X-Assistant-Instance-ID, in: header, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Original execution detached, or its retained terminal evidence
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GenerationStatus' }
+        '401':
+          description: Service authentication required
+        '404':
+          description: Original execution not present
+        '409':
+          description: Dispatch or instance mismatch
+      security:
+      - serviceBearer: []
 components:
   securitySchemes:
     serviceBearer:
@@ -655,6 +688,13 @@ components:
       type: object
       additionalProperties: false
       properties:
+        detached:
+          type: boolean
+          default: false
+        evidenceExpiresAt:
+          type: string
+          format: date-time
+          description: Original deadline plus ten minutes; expired usage is omitted.
         requestId:
           type: string
           format: uuid
