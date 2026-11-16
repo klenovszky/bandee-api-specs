@@ -222,6 +222,54 @@ paths:
       security:
       - browserSession: [
           ]
+    patch:
+      operationId: renameConversation
+      tags:
+      - ChatConversations
+      summary: Set the title of an owned conversation
+      description: A manually set title takes precedence over automatic titles.
+      security:
+      - browserSession: []
+      parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: X-CSRF-TOKEN
+        in: header
+        required: true
+        schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RenameConversation' }
+      responses:
+        '200':
+          description: Updated conversation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Conversation' }
+        '400':
+          description: Invalid title
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
     delete:
       operationId: deleteConversation
       tags:
@@ -1309,6 +1357,9 @@ components:
         title:
           type: string
           maxLength: 120
+        titleCustomized:
+          type: boolean
+          description: Whether the title was set manually. Missing means false.
         createdAt:
           type: string
           format: date-time
@@ -1320,6 +1371,16 @@ components:
       - title
       - createdAt
       - updatedAt
+    RenameConversation:
+      type: object
+      additionalProperties: false
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+          description: Surrounding whitespace is trimmed. The title must contain non-whitespace text and no control characters.
     Message:
       type: object
       additionalProperties: false

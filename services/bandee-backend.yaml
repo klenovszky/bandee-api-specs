@@ -155,6 +155,8 @@ components:
       in: cookie
       name: BANDEE_SESSION
   schemas:
+    RenameConversation:
+      $ref: "./chat-v1.yaml#/components/schemas/RenameConversation"
     DriveConnection:
       $ref: './google-drive.yaml#/components/schemas/DriveConnection'
     DriveFolderInput:
