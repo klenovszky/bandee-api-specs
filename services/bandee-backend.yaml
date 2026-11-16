@@ -130,6 +130,18 @@ paths:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1stream"
   /api/chat/requests/{requestId}/drive-sources:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1drive-sources"
+  /api/chat/requests/{requestId}/analysis:
+    $ref: "./drive-analysis.yaml#/paths/~1api~1chat~1requests~1{requestId}~1analysis"
+  /api/chat/requests/{requestId}/analysis/documents:
+    $ref: "./drive-analysis.yaml#/paths/~1api~1chat~1requests~1{requestId}~1analysis~1documents"
+  /api/chat/requests/{requestId}/analysis/scope:
+    $ref: "./drive-analysis.yaml#/paths/~1api~1chat~1requests~1{requestId}~1analysis~1scope"
+  /api/chat/requests/{requestId}/analysis/plan:
+    $ref: "./drive-analysis.yaml#/paths/~1api~1chat~1requests~1{requestId}~1analysis~1plan"
+  /api/chat/requests/{requestId}/analysis/start:
+    $ref: "./drive-analysis.yaml#/paths/~1api~1chat~1requests~1{requestId}~1analysis~1start"
+  /api/chat/requests/{requestId}/analysis/continue:
+    $ref: "./drive-analysis.yaml#/paths/~1api~1chat~1requests~1{requestId}~1analysis~1continue"
   /api/chat/requests/{requestId}/start:
     $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1start"
   /api/chat/requests/{requestId}/cancel:
@@ -175,6 +187,28 @@ components:
       $ref: './google-drive.yaml#/components/schemas/DriveSource'
     ChatDriveSourcePage:
       $ref: './chat-v1.yaml#/components/schemas/ChatDriveSourcePage'
+    DriveAnalysisScopeInput:
+      $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisScopeInput'
+    DriveAnalysisScope:
+      $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisScope'
+    DriveAnalysisPhase:
+      $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisPhase'
+    DriveAnalysisCoverage:
+      $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisCoverage'
+    DriveAnalysisPlan:
+      $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisPlan'
+    DriveAnalysisStatus:
+      $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisStatus'
+    DriveAnalysisDocument:
+      $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisDocument'
+    DriveAnalysisDocumentPage:
+      $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisDocumentPage'
+    ReviseDriveAnalysisScope:
+      $ref: './drive-analysis.yaml#/components/schemas/ReviseDriveAnalysisScope'
+    PrepareDriveAnalysisPlan:
+      $ref: './drive-analysis.yaml#/components/schemas/PrepareDriveAnalysisPlan'
+    ApproveDriveAnalysisPlan:
+      $ref: './drive-analysis.yaml#/components/schemas/ApproveDriveAnalysisPlan'
     CreateInputAnalysis:
       $ref: "./chat-v1.yaml#/components/schemas/CreateInputAnalysis"
     InputAnalysisResult:

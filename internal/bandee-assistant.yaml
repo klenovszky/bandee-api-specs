@@ -26,6 +26,8 @@ components:
       $ref: "./chat-v1.yaml#/components/schemas/ContextMessage"
     ModelCapabilities:
       $ref: "./chat-v1.yaml#/components/schemas/ModelCapabilities"
+    AnalysisStepContext:
+      $ref: "./chat-v1.yaml#/components/schemas/AnalysisStepContext"
     PrepareGeneration:
       $ref: "./chat-v1.yaml#/components/schemas/PrepareGeneration"
     PreparedGeneration:

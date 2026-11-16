@@ -731,6 +731,10 @@ paths:
         Existing reserved usage is permanently charged in full; the user slot is released
         independently of background provider termination. Content is deleted by default;
         discard=false preserves the question and partial answer for technical recovery.
+        For an analysis parent, apply the same policy to every created child
+        reservation and fence all descendant content writes. Release only the
+        unused plan envelope that has never transferred into a child reservation.
+        Do not create a second parent usage charge.
       responses:
         '202':
           description: Success
@@ -983,7 +987,11 @@ paths:
         subscriber is 409. Terminal requests produce a terminal snapshot, without
         replaying deltas. No automatic reconnect. A lost active stream initiates cancellation.
         Cache-Control: no-store; X-Accel-Buffering: no. Status errors before stream
-        headers are JSON; errors afterwards are sanitized terminal events when possible.'
+        headers are JSON; errors afterwards are sanitized terminal events when possible.
+        For an analysis parent only final-answer deltas are public; intermediate
+        results never appear as chat messages. Paused workflow status may close the
+        stream without authorizing continuation. An active stream loss interrupts
+        the whole workflow and forbids new child dispatch until explicit continuation.'
       security:
       - browserSession: [
           ]
@@ -1059,6 +1067,8 @@ paths:
         SSE/status for preparation, reservation or provider errors. Repeated start
         never redispatches. Before dispatch, lack of a live stream terminates without
         a provider call. Restart never automatically replays a durable dispatch claim.
+        Analysis parents must instead use the version-bound analysis start route;
+        this route rejects them with DRIVE_ANALYSIS_NOT_READY.
       security:
       - browserSession: [
           ]
@@ -1074,6 +1084,11 @@ paths:
         is tracked separately in the background; discarded output must never reappear.
         Without discard, finalize interrupted execution with the full existing reservation,
         preserve content and release the user slot without waiting for provider completion.
+        For an analysis parent, stop creation of new children, fence descendant
+        writes and settle every created child reservation by this same conservative
+        rule. Release only unused envelope funds never transferred to a child.
+        Discard also deletes intermediate and final derived content; financial
+        and physical execution evidence survives. No additional parent charge.
       responses:
         '202':
           description: Success
@@ -1269,6 +1284,9 @@ components:
           - DRIVE_LIMIT
           - DRIVE_CONFIGURATION
           - DRIVE_CONSENT_REQUIRED
+          - DRIVE_ANALYSIS_PLAN_CHANGED
+          - DRIVE_ANALYSIS_NOT_READY
+          - DRIVE_ANALYSIS_CONTINUATION_NOT_ALLOWED
           - INTERNAL_ERROR
         message:
           type: string
@@ -1306,6 +1324,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        driveAnalysis:
+          $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisStatus'
         driveSearchState:
           $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
         driveSources:
@@ -1352,6 +1372,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        driveAnalysis:
+          $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisStatus'
         driveSearchState:
           $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
         driveSources:
@@ -1572,6 +1594,13 @@ components:
         language. Changing the GUI alone never starts or cancels generation.
         inputAnalysisId is allowed only for a new turn, participates in idempotency,
         and cannot reference another user, conversation, language or an incomplete task.
+        driveScope is allowed only for a new turn and participates in idempotency.
+        It creates a durable full-scope analysis parent; no provider generation may
+        start until the user approves its exact analysis plan. The ordinary start
+        route rejects analysis parents. retryOf cannot restart an analysis; use the
+        explicit analysis continuation route. Reading or opening its stream never
+        starts planning or paid work. A captured scope never silently changes when
+        files are added, fail indexing or cease to be accessible.
       oneOf:
       - $ref: '#/components/schemas/CreateNewTurn'
       - $ref: '#/components/schemas/RetryTurn'
@@ -1709,6 +1738,8 @@ components:
       - clientRequestId
       - content
       properties:
+        driveScope:
+          $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisScopeInput'
         inputAnalysisId:
           type: string
           format: uuid
