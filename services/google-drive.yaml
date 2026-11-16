@@ -455,3 +455,7 @@ components:
         fileName: { type: string, maxLength: 500 }
         fileVersion: { type: string, maxLength: 100 }
         page: { type: integer, minimum: 1 }
+        openUrl:
+          type: string
+          format: uri
+          description: Google Drive viewer URL for this cited file. Opening it requires the viewer's own Google Drive access.
