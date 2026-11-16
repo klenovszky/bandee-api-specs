@@ -509,7 +509,9 @@ paths:
         Acquires the same per-user execution slot and enforces the same global,
         personal and guest limits as chat. Idempotency keys share the chat request
         namespace; changed purpose, content, conversation or language is a conflict.
-        VOICE_REVIEW requires nonblank content; FIRST_TITLE forbids content and reads
+        VOICE_REVIEW is the shared review mode for typed questions and speech
+        transcripts; its historical name is retained for compatibility. It requires
+        nonblank content. FIRST_TITLE forbids content and reads
         the first saved user message server-side. FIRST_TITLE is accepted only when
         that message has no applied AI title and no successful or unresolved title task.
         A deliberate retry must be explicit and use a new idempotency key after a
@@ -1907,6 +1909,7 @@ components:
         mode:
           type: string
           enum: [VOICE_REVIEW, FIRST_TITLE]
+          description: VOICE_REVIEW checks typed or recognized text before chat submission; FIRST_TITLE only generates a title for a saved first message.
         content:
           type: string
           minLength: 1
@@ -1960,7 +1963,7 @@ components:
           maxLength: 32
           description: >-
             Optional localized one- or two-word title, at most 32 Unicode code points.
-            For voice, generated in the same call only when the conversation has no
+            For VOICE_REVIEW, generated in the same call for typed or recognized text only when the conversation has no
             saved user turn. For FIRST_TITLE, applied atomically only if its original
             first-message anchor still matches and no newer title has been applied.
             The frontend must also handle pixel overflow on narrow screens.
