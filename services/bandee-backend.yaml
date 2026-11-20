@@ -16,6 +16,8 @@ paths:
     $ref: './google-drive.yaml#/paths/~1api~1drive~1processing'
   /api/drive/documents:
     $ref: './google-drive.yaml#/paths/~1api~1drive~1documents'
+  /api/drive/files/{fileId}/preview:
+    $ref: './google-drive.yaml#/paths/~1api~1drive~1files~1{fileId}~1preview'
   /api/drive/documents/{documentId}:
     $ref: './google-drive.yaml#/paths/~1api~1drive~1documents~1{documentId}'
   /api/drive/disconnect:

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Bandee Google Drive integration
-  version: 1.3.0
+  version: 1.4.0
 security:
   - browserSession: []
 paths:
@@ -200,6 +200,31 @@ paths:
         '401': { $ref: '#/components/responses/DriveProblem' }
         '403': { $ref: '#/components/responses/DriveProblem' }
         '404': { $ref: '#/components/responses/DriveProblem' }
+        '503': { $ref: '#/components/responses/DriveProblem' }
+  /api/drive/files/{fileId}/preview:
+    get:
+      tags: [GoogleDrive]
+      operationId: previewDriveFile
+      summary: View a PDF or Google document from the current account's connected folder
+      description: The server verifies the active pilot session, connected folder, live membership and download permission before releasing private PDF content. Google documents are exported to PDF. The response is never cached.
+      parameters:
+        - in: path
+          name: fileId
+          required: true
+          schema: { type: string, pattern: '^[A-Za-z0-9_-]{1,200}$' }
+      responses:
+        '200':
+          description: Original PDF or PDF export
+          headers:
+            Cache-Control: { schema: { type: string, enum: [no-store] } }
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '400': { $ref: '#/components/responses/DriveProblem' }
+        '401': { $ref: '#/components/responses/DriveProblem' }
+        '403': { $ref: '#/components/responses/DriveProblem' }
+        '409': { $ref: '#/components/responses/DriveProblem' }
+        '429': { $ref: '#/components/responses/DriveProblem' }
         '503': { $ref: '#/components/responses/DriveProblem' }
   /api/drive/preview:
     post:
