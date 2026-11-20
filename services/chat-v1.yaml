@@ -1072,7 +1072,7 @@ paths:
       summary: Explicitly continue the same fixed automatic chat plan after technical interruption
       description: Never re-routes, re-plans or changes models/scope. Already charged routing and completed nodes are not repeated. A new attempt requires remaining-plan funding. Source, price, profile, month and unresolved execution checks may block continuation. Repeating an action UUID only reads its saved outcome.
       security:
-        - sessionCookie: []
+        - browserSession: []
       parameters:
         - name: requestId
           in: path
