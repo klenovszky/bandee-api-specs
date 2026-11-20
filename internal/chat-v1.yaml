@@ -23,6 +23,15 @@ paths:
       description: Returns the current unexpired profile without processing user
         content or invoking generation. A missing, expired, or unverifiable
         profile returns AI_UNAVAILABLE.
+      parameters:
+      - name: model
+        in: query
+        required: false
+        description: Configured model identifier. If omitted, use the configured default model.
+          Unknown or unverified models fail closed; no automatic model substitution occurs.
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9._-]{1,200}$'
       responses:
         '200':
           description: Verified provider capabilities and application transport limits

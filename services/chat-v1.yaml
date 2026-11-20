@@ -1910,6 +1910,12 @@ components:
           type: string
           enum: [VOICE_REVIEW, FIRST_TITLE]
           description: VOICE_REVIEW checks typed or recognized text before chat submission; FIRST_TITLE only generates a title for a saved first message.
+        inputKind:
+          type: string
+          enum: [TYPED, SPEECH]
+          description: Input origin for function-specific model selection. Allowed only for VOICE_REVIEW.
+            Omission retains the historical speech-review assignment. Participates in idempotency.
+            The server selects the model; this field never grants access or bypasses review.
         content:
           type: string
           minLength: 1
