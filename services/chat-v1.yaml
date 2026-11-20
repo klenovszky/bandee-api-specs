@@ -1065,6 +1065,42 @@ paths:
       security:
       - browserSession: [
           ]
+  /api/chat/requests/{requestId}/continue:
+    post:
+      operationId: continueAutomaticChat
+      tags: [ChatRequests]
+      summary: Explicitly continue the same fixed automatic chat plan after technical interruption
+      description: Never re-routes, re-plans or changes models/scope. Already charged routing and completed nodes are not repeated. A new attempt requires remaining-plan funding. Source, price, profile, month and unresolved execution checks may block continuation. Repeating an action UUID only reads its saved outcome.
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: X-CSRF-TOKEN
+          in: header
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContinueAutomaticChat'
+      responses:
+        '202':
+          description: Accepted continuation or saved state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestStatus'
+        '409':
+          description: Fixed plan cannot safely continue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /api/chat/requests/{requestId}/start:
     post:
       operationId: startChatRequest
@@ -1417,6 +1453,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        automaticChat:
+          $ref: '#/components/schemas/AutomaticChatStatus'
         driveAnalysis:
           $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisStatus'
         driveSearchState:
@@ -1461,10 +1499,32 @@ components:
       - content
       - contentState
       - createdAt
+    AutomaticChatStatus:
+      type: object
+      additionalProperties: false
+      required: [phase, completedNodes, totalNodes, documents, ranges, continuationAllowed]
+      description: Informational automatic processing state. It never requests a mode, scope or cost approval. Retrieval is non-exhaustive; only the frozen complete manifest can support coverage claims. Reads never dispatch work.
+      properties:
+        phase: { type: string, enum: [ACCEPTED, ROUTING, PLANNING, RUNNING, COMPLETED, WAITING_INDEX, WAITING_RESOURCE, WAITING_BUDGET, INVALIDATED, FAILED, INTERRUPTED, BLOCKED, DISCARDED] }
+        route: { type: string, enum: [NO_DOCUMENTS, RELEVANT_SEARCH, FULL_SCOPE] }
+        reason: { type: string, enum: [MODEL_CAPACITY, VERIFIED_PRICE_REQUIRED, PROFILE_EXPIRED, PERIOD_CHANGED, CONFIGURATION_CHANGED, PERSONAL_BUDGET, SHARED_BUDGET, INCOMPLETE_SCAN, INCOMPLETE_COVERAGE, SOURCE_CHANGED, SOURCE_VERIFICATION, NO_SUPPORTED_DOCUMENTS, NO_RELEVANT_SOURCES, DRIVE_CONSENT_REQUIRED, EXECUTION_UNCERTAIN, ROUTING_OR_PLAN_FAILED, INVALID_RESULT, REQUEST_EXPIRED] }
+        completedNodes: { type: integer, format: int64, minimum: 0 }
+        totalNodes: { type: integer, format: int64, minimum: 0 }
+        documents: { type: integer, format: int64, minimum: 0 }
+        ranges: { type: integer, format: int64, minimum: 0 }
+        continuationAllowed: { type: boolean, description: Explicit technical continuation only; never automatic on status or reconnect. Reuses the fixed plan and completed validated nodes; never re-routes or silently expands scope. }
+    ContinueAutomaticChat:
+      type: object
+      additionalProperties: false
+      required: [clientActionId]
+      properties:
+        clientActionId: { type: string, format: uuid, description: Idempotency key for one explicit technical continuation. }
     RequestStatus:
       type: object
       additionalProperties: false
       properties:
+        automaticChat:
+          $ref: '#/components/schemas/AutomaticChatStatus'
         driveAnalysis:
           $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisStatus'
         driveSearchState:

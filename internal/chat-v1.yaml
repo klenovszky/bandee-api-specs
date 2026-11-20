@@ -511,6 +511,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        automaticStep:
+          $ref: '#/components/schemas/AutomaticStepContext'
         routingContext:
           $ref: '#/components/schemas/RoutingContext'
         analysisStep:
@@ -556,7 +558,7 @@ components:
       description: Token counting and validation only, never generation. Context hash
         is SHA-256 over RFC 8785 canonical JSON of model, systemPromptVersion, messages,
         maxOutputTokens, thinkingMode, responseLanguage, profileHash, analysisStep
-        and routingContext when supplied. Absent optional fields preserve the previous hash protocol.
+        and routingContext/automaticStep when supplied. Absent optional fields preserve the previous hash protocol.
         The plan binds these exact values. Enforce
         size and deadline limits; tools/caching/multiple candidates are forbidden
         in V1. The backend supplies a SYSTEM message selecting this language before
@@ -575,6 +577,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        automaticStep:
+          $ref: '#/components/schemas/AutomaticStepContext'
         routingContext:
           $ref: '#/components/schemas/RoutingContext'
         analysisStep:
@@ -622,6 +626,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        automaticStep:
+          $ref: '#/components/schemas/AutomaticStepContext'
         routingContext:
           $ref: '#/components/schemas/RoutingContext'
         analysisStep:
@@ -646,6 +652,18 @@ components:
         and match every field. The plan token and context hash bind it as well as the
         selected output size and profile. Mismatch is rejected before provider
         invocation. Dispatch retains its existing single-use/no-retry semantics.
+    AutomaticStepContext:
+      type: object
+      additionalProperties: false
+      required: [parentRequestId, planHash, nodeHash, ordinal, kind, modelConfigHash]
+      description: Trusted backend correlation for one automatic chat child. Mutually exclusive with routingContext and analysisStep. Requires profileHash; requestId differs from parentRequestId. Included in canonical context hash, echoed unchanged in preparation and dispatch. One prepared call only, no tools, retries or workflow orchestration. CHAT uses auto-plan-chat-v1, document nodes use drive-analysis-v2. LEAF/MERGE outputs are buffered and strictly validated by the backend before reuse.
+      properties:
+        parentRequestId: { type: string, format: uuid }
+        planHash: { type: string, pattern: '^[a-f0-9]{64}$' }
+        nodeHash: { type: string, pattern: '^[a-f0-9]{64}$' }
+        modelConfigHash: { type: string, pattern: '^[a-f0-9]{64}$' }
+        ordinal: { type: integer, format: int64, minimum: 0 }
+        kind: { type: string, enum: [CHAT, DIRECT, LEAF, MERGE, FINAL] }
     RoutingContext:
       type: object
       additionalProperties: false
