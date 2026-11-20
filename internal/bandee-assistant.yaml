@@ -30,6 +30,10 @@ components:
       $ref: "./chat-v1.yaml#/components/schemas/ModelCapabilities"
     AnalysisStepContext:
       $ref: "./chat-v1.yaml#/components/schemas/AnalysisStepContext"
+    RoutingContext:
+      $ref: "./chat-v1.yaml#/components/schemas/RoutingContext"
+    RoutingDecision:
+      $ref: "./chat-v1.yaml#/components/schemas/RoutingDecision"
     PrepareGeneration:
       $ref: "./chat-v1.yaml#/components/schemas/PrepareGeneration"
     PreparedGeneration:

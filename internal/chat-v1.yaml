@@ -511,6 +511,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        routingContext:
+          $ref: '#/components/schemas/RoutingContext'
         analysisStep:
           $ref: '#/components/schemas/AnalysisStepContext'
         responseLanguage:
@@ -553,8 +555,8 @@ components:
       - deadline
       description: Token counting and validation only, never generation. Context hash
         is SHA-256 over RFC 8785 canonical JSON of model, systemPromptVersion, messages,
-        maxOutputTokens, thinkingMode, responseLanguage, profileHash and analysisStep
-        when supplied. Absent optional fields preserve the previous hash protocol.
+        maxOutputTokens, thinkingMode, responseLanguage, profileHash, analysisStep
+        and routingContext when supplied. Absent optional fields preserve the previous hash protocol.
         The plan binds these exact values. Enforce
         size and deadline limits; tools/caching/multiple candidates are forbidden
         in V1. The backend supplies a SYSTEM message selecting this language before
@@ -573,6 +575,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        routingContext:
+          $ref: '#/components/schemas/RoutingContext'
         analysisStep:
           $ref: '#/components/schemas/AnalysisStepContext'
         planToken:
@@ -618,6 +622,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        routingContext:
+          $ref: '#/components/schemas/RoutingContext'
         analysisStep:
           $ref: '#/components/schemas/AnalysisStepContext'
         dispatchToken:
@@ -636,10 +642,45 @@ components:
       - contextHash
       - deadline
       description: >-
-        analysisStep must be present exactly when it was supplied during preparation
+        routingContext and analysisStep must be present exactly when supplied during preparation
         and match every field. The plan token and context hash bind it as well as the
         selected output size and profile. Mismatch is rejected before provider
         invocation. Dispatch retains its existing single-use/no-retry semantics.
+    RoutingContext:
+      type: object
+      additionalProperties: false
+      required: [parentRequestId, modelConfigHash, historyHash]
+      description: >-
+        Trusted backend correlation for one internal routing child. Requires
+        profileHash and systemPromptVersion routing-v1; mutually exclusive with
+        analysisStep. The child requestId differs from parentRequestId. Included
+        in the canonical context hash, frozen at preparation and echoed in the
+        preparation response and dispatch. Dispatch must match every field.
+        No browser routing endpoint or authorization is introduced. The model
+        receives only the already counted messages, never this metadata as an
+        additional prompt. Old calls omit routingContext and retain their hash.
+        A routing response is one strict RoutingDecision JSON object, buffered
+        and validated before any delta is exposed. No tools or repair retry.
+      properties:
+        parentRequestId: { type: string, format: uuid }
+        modelConfigHash: { type: string, pattern: '^[a-f0-9]{64}$' }
+        historyHash: { type: string, pattern: '^[a-f0-9]{64}$' }
+    RoutingDecision:
+      type: object
+      additionalProperties: false
+      required: [route, documentNeed, coverageNeed, scope]
+      description: >-
+        Untrusted model proposal, validated and resolved by the backend. It cannot
+        select arbitrary files, grant permissions, execute tools or set prices.
+        Uncertainty is handled by conservative server-side routing and scope,
+        never a user mode/scope choice or a per-request cost confirmation.
+        Relevant results do not prove complete coverage. Protocol errors stop
+        without a paid repair call. No free-text reasoning or confidence score.
+      properties:
+        route: { type: string, enum: [NO_DOCUMENTS, RELEVANT_SEARCH, FULL_SCOPE, UNCERTAIN] }
+        documentNeed: { type: string, enum: [NONE, REQUIRED, UNCERTAIN] }
+        coverageNeed: { type: string, enum: [TARGETED, COMPLETE, UNCERTAIN] }
+        scope: { type: string, enum: [AUTHORIZED_ROOT, PRIOR_SCOPE, UNCERTAIN] }
     AnalysisStepContext:
       type: object
       additionalProperties: false
