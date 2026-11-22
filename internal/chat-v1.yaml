@@ -656,7 +656,7 @@ components:
       type: object
       additionalProperties: false
       required: [parentRequestId, planHash, nodeHash, ordinal, kind, modelConfigHash]
-      description: Trusted backend correlation for one automatic chat child. Mutually exclusive with routingContext and analysisStep. Requires profileHash; requestId differs from parentRequestId. Included in canonical context hash, echoed unchanged in preparation and dispatch. One prepared call only, no tools, retries or workflow orchestration. CHAT uses auto-plan-chat-v1, document nodes use drive-analysis-v2. LEAF/MERGE outputs are buffered and strictly validated by the backend before reuse.
+      description: Trusted backend correlation for one automatic chat child. Mutually exclusive with routingContext and analysisStep. Requires profileHash; requestId differs from parentRequestId. Included in canonical context hash, echoed unchanged in preparation and dispatch. One prepared call only, no tools, retries or workflow orchestration. CHAT uses auto-plan-chat-v1, document nodes use drive-analysis-v3. LEAF/MERGE generation and token measurement use the same provider JSON output schema; exact immediate input coverage and original source authorization are checked by the backend. LEAF/MERGE outputs are buffered and strictly validated by the backend before reuse.
       properties:
         parentRequestId: { type: string, format: uuid }
         planHash: { type: string, pattern: '^[a-f0-9]{64}$' }
