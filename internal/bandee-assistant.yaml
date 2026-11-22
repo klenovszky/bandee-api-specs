@@ -18,6 +18,8 @@ components:
       type: http
       scheme: bearer
   schemas:
+    IntermediateOutputContext:
+      $ref: "./chat-v1.yaml#/components/schemas/IntermediateOutputContext"
     ResponseLanguage:
       $ref: "../services/chat-v1.yaml#/components/schemas/ResponseLanguage"
     Problem:

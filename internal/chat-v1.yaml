@@ -511,6 +511,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        intermediateOutput:
+          $ref: '#/components/schemas/IntermediateOutputContext'
         automaticStep:
           $ref: '#/components/schemas/AutomaticStepContext'
         routingContext:
@@ -558,7 +560,7 @@ components:
       description: Token counting and validation only, never generation. Context hash
         is SHA-256 over RFC 8785 canonical JSON of model, systemPromptVersion, messages,
         maxOutputTokens, thinkingMode, responseLanguage, profileHash, analysisStep
-        and routingContext/automaticStep when supplied. Absent optional fields preserve the previous hash protocol.
+        and routingContext/automaticStep/intermediateOutput when supplied. Absent optional fields preserve the previous hash protocol.
         The plan binds these exact values. Enforce
         size and deadline limits; tools/caching/multiple candidates are forbidden
         in V1. The backend supplies a SYSTEM message selecting this language before
@@ -577,6 +579,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        intermediateOutput:
+          $ref: '#/components/schemas/IntermediateOutputContext'
         automaticStep:
           $ref: '#/components/schemas/AutomaticStepContext'
         routingContext:
@@ -626,6 +630,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        intermediateOutput:
+          $ref: '#/components/schemas/IntermediateOutputContext'
         automaticStep:
           $ref: '#/components/schemas/AutomaticStepContext'
         routingContext:
@@ -648,15 +654,55 @@ components:
       - contextHash
       - deadline
       description: >-
-        routingContext and analysisStep must be present exactly when supplied during preparation
+        intermediateOutput, automaticStep, routingContext and analysisStep must be present exactly when supplied during preparation
         and match every field. The plan token and context hash bind it as well as the
         selected output size and profile. Mismatch is rejected before provider
         invocation. Dispatch retains its existing single-use/no-retry semantics.
+    IntermediateOutputContext:
+      type: object
+      additionalProperties: false
+      required: [kind, schemaVersion, immediateInputKeys, originalSourceIds, digest]
+      description: >-
+        Backend-owned intermediate result constraint derived only from the frozen,
+        authorized plan. Required for automatic LEAF/MERGE and their count-only
+        preparation; forbidden for other kinds. Never extracted from prompt text
+        or untrusted model output. LEAF keys are original source UUID strings;
+        MERGE keys are immediate dependency ordinals as canonical decimal strings.
+        Keys retain plan order, source UUIDs are distinct and sorted lexically.
+        Digest is lowercase SHA-256 of canonical JSON with sorted keys of kind,
+        schemaVersion, immediateInputKeys and originalSourceIds (excluding digest).
+        The whole context is included in contextHash, copied into the single-use
+        plan and echoed unchanged in preparation and dispatch. It is no authority
+        for sources or another call. The backend still checks ownership and scope.
+        Schema drive-evidence-v2 has exactly complete (boolean), coveredInputs
+        (ordered string array equal to immediateInputKeys), evidence (objects with
+        text and nonempty original sourceIds), and limitations (string array).
+        Provider schema uses singleton string enums in coveredInputs.prefixItems,
+        minItems=maxItems=key count, and sourceIds.items.enum=originalSourceIds.
+        All object fields are required, additionalProperties=false; complete=true
+        and semantic validity remain backend checks. No uniqueItems or boolean enum.
+        Count and generation use identical schema/MIME/output/thinking settings.
+        Expanded schema bytes count toward preparation and context memory limits;
+        over-limit requests fail before counting or dispatch, without schema fallback.
+      properties:
+        kind: { type: string, enum: [LEAF, MERGE] }
+        schemaVersion: { type: string, enum: [drive-evidence-v2] }
+        immediateInputKeys:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { type: string, minLength: 1, maxLength: 36 }
+        originalSourceIds:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { type: string, format: uuid }
+        digest: { type: string, pattern: '^[a-f0-9]{64}$' }
     AutomaticStepContext:
       type: object
       additionalProperties: false
       required: [parentRequestId, planHash, nodeHash, ordinal, kind, modelConfigHash]
-      description: Trusted backend correlation for one automatic chat child. Mutually exclusive with routingContext and analysisStep. Requires profileHash; requestId differs from parentRequestId. Included in canonical context hash, echoed unchanged in preparation and dispatch. One prepared call only, no tools, retries or workflow orchestration. CHAT uses auto-plan-chat-v1, document nodes use drive-analysis-v3. LEAF/MERGE generation and token measurement use the same provider JSON output schema; exact immediate input coverage and original source authorization are checked by the backend. LEAF/MERGE outputs are buffered and strictly validated by the backend before reuse.
+      description: Trusted backend correlation for one automatic chat child. Mutually exclusive with routingContext and analysisStep. Requires profileHash; requestId differs from parentRequestId. Included in canonical context hash, echoed unchanged in preparation and dispatch. One prepared call only, no tools, retries or workflow orchestration. CHAT uses auto-plan-chat-v1, DIRECT/FINAL use drive-analysis-v3, LEAF/MERGE require drive-analysis-v4 and intermediateOutput with matching kind. Old intermediate plans are rejected; no in-place migration or retry. LEAF/MERGE outputs are buffered and strictly validated by the backend before reuse.
       properties:
         parentRequestId: { type: string, format: uuid }
         planHash: { type: string, pattern: '^[a-f0-9]{64}$' }
