@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Bandee Chat V1 - Internal Assistant API
-  version: 0.2.0
+  version: 0.3.0
   description: Internal contract; no browser client generation. Private network plus
     mandatory shared service bearer authentication. No cookies, end-user IDs or prices
     are trusted here. Provider generation has no automatic retry at any layer. SSE
@@ -670,7 +670,7 @@ components:
       required: [parentRequestId, modelConfigHash, historyHash]
       description: >-
         Trusted backend correlation for one internal routing child. Requires
-        profileHash and systemPromptVersion routing-v1; mutually exclusive with
+        profileHash and systemPromptVersion routing-json-v2; mutually exclusive with
         analysisStep. The child requestId differs from parentRequestId. Included
         in the canonical context hash, frozen at preparation and echoed in the
         preparation response and dispatch. Dispatch must match every field.
@@ -679,6 +679,10 @@ components:
         additional prompt. Old calls omit routingContext and retain their hash.
         A routing response is one strict RoutingDecision JSON object, buffered
         and validated before any delta is exposed. No tools or repair retry.
+        The provider is configured for schema-constrained JSON matching the
+        generated RoutingDecision contract. Token counting includes that schema
+        and the same invocation settings used by generation. Legacy routing-v1
+        preparation is rejected before token counting or generation.
       properties:
         parentRequestId: { type: string, format: uuid }
         modelConfigHash: { type: string, pattern: '^[a-f0-9]{64}$' }
