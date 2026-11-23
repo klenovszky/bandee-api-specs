@@ -1764,13 +1764,9 @@ components:
         language. Changing the GUI alone never starts or cancels generation.
         inputAnalysisId is allowed only for a new turn, participates in idempotency,
         and cannot reference another user, conversation, language or an incomplete task.
-        driveScope is allowed only for a new turn and participates in idempotency.
-        It creates a durable full-scope analysis parent; no provider generation may
-        start until the user approves its exact analysis plan. The ordinary start
-        route rejects analysis parents. retryOf cannot restart an analysis; use the
-        explicit analysis continuation route. Reading or opening its stream never
-        starts planning or paid work. A captured scope never silently changes when
-        files are added, fail indexing or cease to be accessible.
+        Retired manual analysis parents cannot start, retry or continue.
+        Document processing is selected by automatic chat when enabled; no manual
+        scope selection or analysis-plan approval is accepted.
       oneOf:
       - $ref: '#/components/schemas/CreateNewTurn'
       - $ref: '#/components/schemas/RetryTurn'
