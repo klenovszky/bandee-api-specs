@@ -1173,8 +1173,8 @@ paths:
         SSE/status for preparation, reservation or provider errors. Repeated start
         never redispatches. Before dispatch, lack of a live stream terminates without
         a provider call. Restart never automatically replays a durable dispatch claim.
-        Analysis parents must instead use the version-bound analysis start route;
-        this route rejects them with DRIVE_ANALYSIS_NOT_READY.
+        Retired manual analysis requests cannot be started through this route
+        and are rejected with RETRY_NOT_ALLOWED.
       security:
       - browserSession: [
           ]
@@ -1400,9 +1400,6 @@ components:
           - DRIVE_LIMIT
           - DRIVE_CONFIGURATION
           - DRIVE_CONSENT_REQUIRED
-          - DRIVE_ANALYSIS_PLAN_CHANGED
-          - DRIVE_ANALYSIS_NOT_READY
-          - DRIVE_ANALYSIS_CONTINUATION_NOT_ALLOWED
           - INTERNAL_ERROR
         message:
           type: string
@@ -1455,8 +1452,6 @@ components:
       properties:
         automaticChat:
           $ref: '#/components/schemas/AutomaticChatStatus'
-        driveAnalysis:
-          $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisStatus'
         driveSearchState:
           $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
         driveSources:
@@ -1525,8 +1520,6 @@ components:
       properties:
         automaticChat:
           $ref: '#/components/schemas/AutomaticChatStatus'
-        driveAnalysis:
-          $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisStatus'
         driveSearchState:
           $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
         driveSources:
@@ -1915,8 +1908,6 @@ components:
       - clientRequestId
       - content
       properties:
-        driveScope:
-          $ref: './drive-analysis.yaml#/components/schemas/DriveAnalysisScopeInput'
         inputAnalysisId:
           type: string
           format: uuid

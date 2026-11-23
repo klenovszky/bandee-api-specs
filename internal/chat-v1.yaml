@@ -517,8 +517,6 @@ components:
           $ref: '#/components/schemas/AutomaticStepContext'
         routingContext:
           $ref: '#/components/schemas/RoutingContext'
-        analysisStep:
-          $ref: '#/components/schemas/AnalysisStepContext'
         responseLanguage:
           $ref: '../services/chat-v1.yaml#/components/schemas/ResponseLanguage'
         requestId:
@@ -559,7 +557,7 @@ components:
       - deadline
       description: Token counting and validation only, never generation. Context hash
         is SHA-256 over RFC 8785 canonical JSON of model, systemPromptVersion, messages,
-        maxOutputTokens, thinkingMode, responseLanguage, profileHash, analysisStep
+        maxOutputTokens, thinkingMode, responseLanguage, profileHash
         and routingContext/automaticStep/intermediateOutput when supplied. Absent optional fields preserve the previous hash protocol.
         The plan binds these exact values. Enforce
         size and deadline limits; tools/caching/multiple candidates are forbidden
@@ -568,13 +566,6 @@ components:
         the exact prepared messages for dispatch. Never append an uncounted language
         instruction at generation time. Language is fixed for this request; switching
         the GUI cannot alter an accepted plan or active generation.
-        analysisStep is server-supplied correlation for one DRIVE_ANALYSIS_STEP
-        child; requestId must differ from parentRequestId. It requires an unexpired
-        profileHash, binds the exact prepared plan and must be echoed unchanged in
-        the preparation response and dispatch. It never authorizes another call,
-        independent tool use or automatic retry. The assistant runs one physical
-        call and does not orchestrate the workflow. Intermediate output is validated
-        by the backend and is never treated as voice review or a conversation title.
     PreparedGeneration:
       type: object
       additionalProperties: false
@@ -585,8 +576,6 @@ components:
           $ref: '#/components/schemas/AutomaticStepContext'
         routingContext:
           $ref: '#/components/schemas/RoutingContext'
-        analysisStep:
-          $ref: '#/components/schemas/AnalysisStepContext'
         planToken:
           type: string
         contextHash:
@@ -636,8 +625,6 @@ components:
           $ref: '#/components/schemas/AutomaticStepContext'
         routingContext:
           $ref: '#/components/schemas/RoutingContext'
-        analysisStep:
-          $ref: '#/components/schemas/AnalysisStepContext'
         dispatchToken:
           type: string
           format: uuid
@@ -654,7 +641,7 @@ components:
       - contextHash
       - deadline
       description: >-
-        intermediateOutput, automaticStep, routingContext and analysisStep must be present exactly when supplied during preparation
+        intermediateOutput, automaticStep and routingContext must be present exactly when supplied during preparation
         and match every field. The plan token and context hash bind it as well as the
         selected output size and profile. Mismatch is rejected before provider
         invocation. Dispatch retains its existing single-use/no-retry semantics.
@@ -700,7 +687,7 @@ components:
       type: object
       additionalProperties: false
       required: [parentRequestId, planHash, nodeHash, ordinal, kind, modelConfigHash]
-      description: Trusted backend correlation for one automatic chat child. Mutually exclusive with routingContext and analysisStep. Requires profileHash; requestId differs from parentRequestId. Included in canonical context hash, echoed unchanged in preparation and dispatch. One prepared call only, no tools, retries or workflow orchestration. CHAT uses auto-plan-chat-v1, DIRECT/FINAL use drive-analysis-v3, LEAF/MERGE require drive-analysis-v4 and intermediateOutput with matching kind. Old intermediate plans are rejected; no in-place migration or retry. LEAF/MERGE outputs are buffered and strictly validated by the backend before reuse.
+      description: Trusted backend correlation for one automatic chat child. Mutually exclusive with routingContext. Requires profileHash; requestId differs from parentRequestId. Included in canonical context hash, echoed unchanged in preparation and dispatch. One prepared call only, no tools, retries or workflow orchestration. CHAT uses auto-plan-chat-v1, DIRECT/FINAL use drive-analysis-v3, LEAF/MERGE require drive-analysis-v4 and intermediateOutput with matching kind. Old intermediate plans are rejected; no in-place migration or retry. LEAF/MERGE outputs are buffered and strictly validated by the backend before reuse.
       properties:
         parentRequestId: { type: string, format: uuid }
         planHash: { type: string, pattern: '^[a-f0-9]{64}$' }
@@ -715,7 +702,7 @@ components:
       description: >-
         Trusted backend correlation for one internal routing child. Requires
         profileHash and systemPromptVersion routing-json-v2; mutually exclusive with
-        analysisStep. The child requestId differs from parentRequestId. Included
+        automaticStep. The child requestId differs from parentRequestId. Included
         in the canonical context hash, frozen at preparation and echoed in the
         preparation response and dispatch. Dispatch must match every field.
         No browser routing endpoint or authorization is introduced. The model
@@ -747,22 +734,6 @@ components:
         documentNeed: { type: string, enum: [NONE, REQUIRED, UNCERTAIN] }
         coverageNeed: { type: string, enum: [TARGETED, COMPLETE, UNCERTAIN] }
         scope: { type: string, enum: [AUTHORIZED_ROOT, PRIOR_SCOPE, UNCERTAIN] }
-    AnalysisStepContext:
-      type: object
-      additionalProperties: false
-      required: [analysisId, parentRequestId, planVersion, nodeKey, kind]
-      description: >-
-        Trusted backend correlation, not browser input or authorization. One
-        analysis/planVersion/nodeKey maps to one durable child request and dispatch.
-        A replay cannot replace the child or invoke the provider again. Metadata is
-        not appended to the model prompt after token counting. No document text,
-        file names, end-user identity, price or credential belongs in this object.
-      properties:
-        analysisId: { type: string, format: uuid }
-        parentRequestId: { type: string, format: uuid }
-        planVersion: { type: integer, format: int64, minimum: 1 }
-        nodeKey: { type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9_.:-]+$' }
-        kind: { type: string, enum: [DIRECT, LEAF, MERGE, FINAL] }
     ProviderUsage:
       type: object
       additionalProperties: false

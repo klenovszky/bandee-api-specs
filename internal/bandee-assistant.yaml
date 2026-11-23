@@ -30,8 +30,6 @@ components:
       $ref: "./chat-v1.yaml#/components/schemas/ContextMessage"
     ModelCapabilities:
       $ref: "./chat-v1.yaml#/components/schemas/ModelCapabilities"
-    AnalysisStepContext:
-      $ref: "./chat-v1.yaml#/components/schemas/AnalysisStepContext"
     RoutingContext:
       $ref: "./chat-v1.yaml#/components/schemas/RoutingContext"
     RoutingDecision:
