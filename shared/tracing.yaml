@@ -1,0 +1,141 @@
+openapi: 3.0.3
+info:
+  title: Bandee request tracing
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    TraceEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - sequence
+        - spanId
+        - operation
+        - kind
+        - elapsedUs
+        - observedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        sequence:
+          type: integer
+          format: int64
+          minimum: 1
+        spanId:
+          type: string
+          format: uuid
+        parentSpanId:
+          type: string
+          format: uuid
+        requestId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+          pattern: ^[A-Z][A-Z0-9_]{0,95}$
+          maxLength: 96
+        kind:
+          type: string
+          enum:
+            - START
+            - END
+            - MARKER
+            - SKIPPED
+            - LOSS
+            - CLOSE
+        elapsedUs:
+          type: integer
+          format: int64
+          minimum: 0
+        observedAt:
+          type: string
+          format: date-time
+        outcome:
+          type: string
+          enum:
+            - SUCCESS
+            - ERROR
+            - CANCELLED
+            - UNKNOWN
+        count:
+          type: integer
+          format: int64
+          minimum: 0
+        bytes:
+          type: integer
+          format: int64
+          minimum: 0
+        tokens:
+          type: integer
+          format: int64
+          minimum: 0
+        attempt:
+          type: integer
+          minimum: 0
+        maxGapUs:
+          type: integer
+          format: int64
+          minimum: 0
+        code:
+          type: string
+          enum:
+            - OPERATION_FAILED
+            - CANCELLED
+            - BUFFER_FULL
+            - DELIVERY_FAILED
+            - CLIENT_HIDDEN
+            - NOT_REQUIRED
+            - TIMEOUT
+    TraceBatch:
+      type: object
+      additionalProperties: false
+      required:
+        - traceId
+        - conversationId
+        - producerId
+        - clockId
+        - component
+        - events
+      properties:
+        traceId:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+        producerId:
+          type: string
+          format: uuid
+        clockId:
+          type: string
+          format: uuid
+        component:
+          type: string
+          enum:
+            - FRONTEND
+            - NUXT
+            - BACKEND
+            - ASSISTANT
+        build:
+          type: string
+          pattern: ^[A-Za-z0-9._-]{1,80}$
+          maxLength: 80
+        events:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/TraceEvent'
+    TraceReceipt:
+      type: object
+      additionalProperties: false
+      required:
+        - acknowledgedSequence
+      properties:
+        acknowledgedSequence:
+          type: integer
+          format: int64
+          minimum: 0

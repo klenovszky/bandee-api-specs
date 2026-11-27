@@ -1,0 +1,55 @@
+openapi: 3.0.3
+info:
+  title: Bandee tracing ingestion
+  version: 1.0.0
+paths:
+  /api/chat/traces/events:
+    post:
+      tags:
+        - RequestTracing
+      operationId: ingestTraceEvents
+      summary: Persist bounded content-free request timing events
+      description: >-
+        Session and CSRF required. The trace must already be registered by an owned review/chat request. Only
+        FRONTEND and client-reported NUXT observations are accepted. Commit precedes acknowledgement; replay
+        is idempotent. A browser cannot write authoritative service events. No chat text or arbitrary metadata
+        is accepted.
+      security:
+        - browserSession: []
+      parameters:
+        - in: header
+          name: X-CSRF-TOKEN
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../shared/tracing.yaml#/components/schemas/TraceBatch
+      responses:
+        '200':
+          description: Events committed, contiguous producer sequence acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: ../shared/tracing.yaml#/components/schemas/TraceReceipt
+        '400':
+          description: Invalid or conflicting batch
+        '401':
+          description: Authentication required
+        '403':
+          description: Owner or service mismatch
+        '404':
+          description: Trace absent, deleted or expired
+        '413':
+          description: Batch too large
+        '429':
+          description: Trace event limit exceeded
+components:
+  securitySchemes:
+    browserSession:
+      type: apiKey
+      in: cookie
+      name: BANDEE_SESSION

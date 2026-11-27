@@ -18,6 +18,12 @@ components:
       type: http
       scheme: bearer
   schemas:
+    TraceBatch:
+      $ref: '../shared/tracing.yaml#/components/schemas/TraceBatch'
+    TraceEvent:
+      $ref: '../shared/tracing.yaml#/components/schemas/TraceEvent'
+    TraceReceipt:
+      $ref: '../shared/tracing.yaml#/components/schemas/TraceReceipt'
     IntermediateOutputContext:
       $ref: "./chat-v1.yaml#/components/schemas/IntermediateOutputContext"
     ResponseLanguage:

@@ -1,0 +1,12 @@
+openapi: 3.0.3
+info:
+  title: Bandee backend internal telemetry
+  version: 1.0.0
+paths:
+  /internal/tracing/events:
+    $ref: ./tracing.yaml#/paths/~1internal~1tracing~1events
+components:
+  securitySchemes:
+    serviceBearer:
+      type: http
+      scheme: bearer

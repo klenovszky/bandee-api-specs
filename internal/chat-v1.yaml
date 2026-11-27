@@ -59,6 +59,22 @@ paths:
                 $ref: '#/components/schemas/Problem'
       security:
       - serviceBearer: []
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /internal/ai/prepare:
     post:
       operationId: prepareGeneration
@@ -123,6 +139,22 @@ paths:
       security:
       - serviceBearer: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /internal/ai/generations/{requestId}:
     post:
       operationId: dispatchGeneration
@@ -333,6 +365,22 @@ paths:
       security:
       - serviceBearer: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /internal/ai/generations/{requestId}/detach:
     post:
       operationId: detachGeneration
@@ -362,6 +410,22 @@ paths:
           description: Dispatch or instance mismatch
       security:
       - serviceBearer: []
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
 components:
   securitySchemes:
     serviceBearer:

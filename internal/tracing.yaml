@@ -1,0 +1,47 @@
+openapi: 3.0.3
+info:
+  title: Bandee tracing ingestion
+  version: 1.0.0
+paths:
+  /internal/tracing/events:
+    post:
+      tags:
+        - RequestTracing
+      operationId: ingestInternalTraceEvents
+      summary: Persist bounded content-free request timing events
+      description: >-
+        Service-authenticated telemetry. The trace must already exist and each request must be bound to its
+        owner. Only ASSISTANT and NUXT are accepted. UUIDs do not grant access. No provider dispatch occurs.
+      security:
+        - serviceBearer: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../shared/tracing.yaml#/components/schemas/TraceBatch
+      responses:
+        '200':
+          description: Events committed, contiguous producer sequence acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: ../shared/tracing.yaml#/components/schemas/TraceReceipt
+        '400':
+          description: Invalid or conflicting batch
+        '401':
+          description: Authentication required
+        '403':
+          description: Owner or service mismatch
+        '404':
+          description: Trace absent, deleted or expired
+        '413':
+          description: Batch too large
+        '429':
+          description: Trace event limit exceeded
+components:
+  securitySchemes:
+    serviceBearer:
+      type: http
+      scheme: bearer

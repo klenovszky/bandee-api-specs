@@ -4,6 +4,8 @@ info:
   description: "REST API specification for the Bandee backend service."
   version: "0.0.1-SNAPSHOT"
 paths:
+  /api/chat/traces/events:
+    $ref: './tracing.yaml#/paths/~1api~1chat~1traces~1events'
   /api/chat/requests/{requestId}/continue:
     $ref: './chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1continue'
   /api/drive:
@@ -147,6 +149,12 @@ components:
       in: cookie
       name: BANDEE_SESSION
   schemas:
+    TraceBatch:
+      $ref: '../shared/tracing.yaml#/components/schemas/TraceBatch'
+    TraceEvent:
+      $ref: '../shared/tracing.yaml#/components/schemas/TraceEvent'
+    TraceReceipt:
+      $ref: '../shared/tracing.yaml#/components/schemas/TraceReceipt'
     RenameConversation:
       $ref: "./chat-v1.yaml#/components/schemas/RenameConversation"
     DriveConnection:

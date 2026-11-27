@@ -157,6 +157,22 @@ paths:
       security:
       - browserSession: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/conversations/{conversationId}:
     get:
       operationId: getConversation
@@ -343,6 +359,22 @@ paths:
       security:
       - browserSession: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/conversations/{conversationId}/messages:
     get:
       operationId: listMessages
@@ -425,6 +457,22 @@ paths:
       security:
       - browserSession: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/conversations/{conversationId}/input-analyses:
     post:
       operationId: createInputAnalysis
@@ -523,6 +571,22 @@ paths:
       security:
       - browserSession: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/conversations/{conversationId}/input-analyses/discard:
     post:
       operationId: discardInputAnalysis
@@ -632,6 +696,22 @@ paths:
       security:
       - browserSession: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/input-analyses/{requestId}:
     get:
       operationId: getInputAnalysis
@@ -692,6 +772,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/conversations/{conversationId}/requests:
     post:
       operationId: createChatRequest
@@ -778,6 +874,22 @@ paths:
       security:
       - browserSession: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/conversations/{conversationId}/requests/discard:
     post:
       operationId: discardChatRequest
@@ -889,6 +1001,22 @@ paths:
       security:
       - browserSession: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/requests/{requestId}:
     get:
       operationId: getChatRequest
@@ -954,6 +1082,22 @@ paths:
       security:
       - browserSession: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/requests/{requestId}/drive-sources:
     get:
       operationId: listChatDriveSources
@@ -991,6 +1135,22 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Problem' }
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/requests/{requestId}/stream:
     get:
       operationId: readChatStream
@@ -1065,6 +1225,22 @@ paths:
       security:
       - browserSession: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/requests/{requestId}/continue:
     post:
       operationId: continueAutomaticChat
@@ -1101,6 +1277,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/requests/{requestId}/start:
     post:
       operationId: startChatRequest
@@ -1178,6 +1370,22 @@ paths:
       security:
       - browserSession: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/chat/requests/{requestId}/cancel:
     post:
       operationId: cancelChatRequest
@@ -1277,6 +1485,22 @@ paths:
       security:
       - browserSession: [
           ]
+    parameters:
+      - name: X-Bandee-Trace-ID
+        in: header
+        required: false
+        description: Opaque owned trace correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Bandee-Parent-Span
+        in: header
+        required: false
+        description: Calling span correlation; never authorization.
+        schema:
+          type: string
+          format: uuid
+
   /api/ai/budget:
     get:
       operationId: getOwnAiBudget
