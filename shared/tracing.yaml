@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Bandee request tracing
-  version: 1.0.0
+  version: 2.0.0
 paths: {}
 components:
   schemas:
@@ -33,6 +33,12 @@ components:
         requestId:
           type: string
           format: uuid
+        phaseSpanId:
+          type: string
+          format: uuid
+          description: Explicit owning phase within this trace; timestamps do not establish ownership.
+        phaseSummary:
+          $ref: '#/components/schemas/TracePhaseSummary'
         operation:
           type: string
           pattern: ^[A-Z][A-Z0-9_]{0,95}$
@@ -135,6 +141,71 @@ components:
         - acknowledgedSequence
       properties:
         acknowledgedSequence:
+          type: integer
+          format: int64
+          minimum: 0
+
+    TraceCategoryTiming:
+      type: object
+      additionalProperties: false
+      required: [category, exclusiveUs]
+      properties:
+        category:
+          type: string
+          enum: [CONFIGURATION, SOURCE_INDEX, DRIVE_VERIFY, DRIVE_HTTP, INPUT_BUILD, CAPABILITY_HTTP, TOKEN_HTTP, PLAN_GRAPH, RESERVATION, DATABASE, SCHEDULING, TELEMETRY, FINALIZATION, PROVIDER_WAIT]
+        exclusiveUs:
+          type: integer
+          format: int64
+          minimum: 0
+    TracePhaseSummary:
+      type: object
+      additionalProperties: false
+      description: Cumulative same-clock accounting; use the latest revision, never sum revisions. Detail completeness is independent.
+      required: [version, revision, phase, startUs, endUs, state, categories, unattributedUs, physicalStarted, physicalFinished, detailEvents, lostDetailEvents]
+      properties:
+        version:
+          type: integer
+          enum: [2]
+        revision:
+          type: integer
+          format: int64
+          minimum: 1
+        phase:
+          type: string
+          enum: [ROUTING, PLANNING, EXECUTION, PUBLISHING, FINALIZATION]
+        startUs:
+          type: integer
+          format: int64
+          minimum: 0
+        endUs:
+          type: integer
+          format: int64
+          minimum: 0
+        state:
+          type: string
+          enum: [RUNNING, SUCCESS, ERROR, CANCELLED]
+        categories:
+          type: array
+          maxItems: 14
+          items:
+            $ref: '#/components/schemas/TraceCategoryTiming'
+        unattributedUs:
+          type: integer
+          format: int64
+          minimum: 0
+        physicalStarted:
+          type: integer
+          format: int64
+          minimum: 0
+        physicalFinished:
+          type: integer
+          format: int64
+          minimum: 0
+        detailEvents:
+          type: integer
+          format: int64
+          minimum: 0
+        lostDetailEvents:
           type: integer
           format: int64
           minimum: 0
