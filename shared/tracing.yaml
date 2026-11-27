@@ -94,7 +94,6 @@ components:
       additionalProperties: false
       required:
         - traceId
-        - conversationId
         - producerId
         - clockId
         - component
