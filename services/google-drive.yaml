@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Bandee Google Drive integration
-  version: 1.4.0
+  version: 1.5.0
 security:
   - browserSession: []
 paths:
@@ -35,11 +35,11 @@ paths:
       operationId: connectDriveFolder
       summary: Confirm a folder with separate local import and cloud permissions
       description: >-
-        The server revalidates the folder, preview token, account and expected version.
+        The server validates the worker-confirmed folder token, account and expected version.
         Replacement invalidates in-flight work and excludes old derived history from
         future model contexts. Local text/vector storage requires importConsent;
         existing connections are not silently opted in. Credentials remain in the
-        trusted backend/worker services. Confirmation schedules asynchronous work.
+        worker only. Confirmation schedules asynchronous work.
       parameters:
         - { $ref: '#/components/parameters/Csrf' }
       requestBody:
@@ -206,13 +206,15 @@ paths:
       tags: [GoogleDrive]
       operationId: previewDriveFile
       summary: View a PDF or Google document from the current account's connected folder
-      description: The server verifies the active pilot session, connected folder, live membership and download permission before releasing private PDF content. Google documents are exported to PDF. The response is never cached.
+      description: The worker verifies membership and prepares a temporary PDF. HTTP 202 means pending; repeat the GET until 200 or failure. The backend serves only owner-scoped artifacts, limited to 5 MiB and five minutes. It never calls Drive. The response is never cached.
       parameters:
         - in: path
           name: fileId
           required: true
           schema: { type: string, pattern: '^[A-Za-z0-9_-]{1,200}$' }
       responses:
+        '202':
+          description: Worker preparation pending; no response body.
         '200':
           description: Original PDF or PDF export
           headers:
@@ -338,8 +340,9 @@ components:
     DriveFolderPreview:
       type: object
       additionalProperties: false
-      required: [folderId, folderName, previewToken, expectedVersion]
+      required: [folderId, folderName, previewToken, expectedVersion, state]
       properties:
+        state: { type: string, enum: [PENDING, READY], description: Repeat the same POST while pending; failed tasks return a Problem. }
         folderId: { type: string }
         folderName: { type: string, maxLength: 500 }
         previewToken: { type: string, format: uuid }
