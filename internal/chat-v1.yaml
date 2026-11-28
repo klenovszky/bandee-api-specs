@@ -2,36 +2,36 @@ openapi: 3.0.3
 info:
   title: Bandee Chat V1 - Internal Assistant API
   version: 0.3.0
-  description: Internal contract; no browser client generation. Private network plus
-    mandatory shared service bearer authentication. No cookies, end-user IDs or prices
-    are trusted here. Provider generation has no automatic retry at any layer. SSE
-    transport is explicitly implemented and tested.
+  description: >-
+    Internal contract; no browser client generation. Private network plus mandatory shared service bearer
+    authentication. No cookies, end-user IDs or prices are trusted here. Provider generation has no automatic
+    retry at any layer. SSE transport is explicitly implemented and tested.
 security:
-- serviceBearer: [
-    ]
+  - serviceBearer: []
 tags:
-- name: AiPreparation
-- name: AiGeneration
-- name: AiInternalStreams
+  - name: AiPreparation
+  - name: AiGeneration
+  - name: AiInternalStreams
 paths:
   /internal/ai/capabilities:
     get:
       operationId: getModelCapabilities
       tags:
-      - AiPreparation
+        - AiPreparation
       summary: Read the assistant's currently verified execution profile
-      description: Returns the current unexpired profile without processing user
-        content or invoking generation. A missing, expired, or unverifiable
-        profile returns AI_UNAVAILABLE.
+      description: >-
+        Returns the current unexpired profile without processing user content or invoking generation. A
+        missing, expired, or unverifiable profile returns AI_UNAVAILABLE.
       parameters:
-      - name: model
-        in: query
-        required: false
-        description: Configured model identifier. If omitted, use the configured default model.
-          Unknown or unverified models fail closed; no automatic model substitution occurs.
-        schema:
-          type: string
-          pattern: '^[A-Za-z0-9._-]{1,200}$'
+        - name: model
+          in: query
+          required: false
+          description: >-
+            Configured model identifier. If omitted, use the configured default model. Unknown or unverified
+            models fail closed; no automatic model substitution occurs.
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9._-]{1,200}$
       responses:
         '200':
           description: Verified provider capabilities and application transport limits
@@ -40,7 +40,8 @@ paths:
               description: The response must not be stored by HTTP caches.
               schema:
                 type: string
-                enum: [no-store]
+                enum:
+                  - no-store
           content:
             application/json:
               schema:
@@ -58,7 +59,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       security:
-      - serviceBearer: []
+        - serviceBearer: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -74,12 +75,11 @@ paths:
         schema:
           type: string
           format: uuid
-
   /internal/ai/prepare:
     post:
       operationId: prepareGeneration
       tags:
-      - AiPreparation
+        - AiPreparation
       summary: Validate and count tokens without generating
       responses:
         '200':
@@ -137,8 +137,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PrepareGeneration'
       security:
-      - serviceBearer: [
-          ]
+        - serviceBearer: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -154,14 +153,12 @@ paths:
         schema:
           type: string
           format: uuid
-
   /internal/ai/generations/{requestId}:
     post:
       operationId: dispatchGeneration
       tags:
-      - AiInternalStreams
-      summary: Consume one prepared plan and invoke the provider at most once per
-        dispatch
+        - AiInternalStreams
+      summary: Consume one prepared plan and invoke the provider at most once per dispatch
       responses:
         '200':
           description: Success
@@ -218,25 +215,23 @@ paths:
             schema:
               $ref: '#/components/schemas/DispatchGeneration'
       parameters:
-      - name: requestId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      description: Backend must durably reserve and claim dispatch before calling.
-        Duplicate dispatch tokens or a reused plan never invoke the provider again;
-        return 409/status evidence. Commit process-local provider boundary before
-        SDK invocation. Unknown transport results are never automatically replayed.
-        Cancellation tries to stop provider execution; usage may be absent and cost
-        uncertain.
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      description: >-
+        Backend must durably reserve and claim dispatch before calling. Duplicate dispatch tokens or a reused
+        plan never invoke the provider again; return 409/status evidence. Commit process-local provider
+        boundary before SDK invocation. Unknown transport results are never automatically replayed.
+        Cancellation tries to stop provider execution; usage may be absent and cost uncertain.
       security:
-      - serviceBearer: [
-          ]
+        - serviceBearer: []
     get:
       operationId: getGenerationStatus
       tags:
-      - AiGeneration
+        - AiGeneration
       summary: Read process-local execution evidence
       responses:
         '200':
@@ -288,21 +283,30 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
-      - { name: X-Dispatch-Token, in: header, required: false, schema: { type: string, format: uuid } }
-      - { name: X-Assistant-Instance-ID, in: header, required: false, schema: { type: string, format: uuid } }
-      - name: requestId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Dispatch-Token
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: X-Assistant-Instance-ID
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       security:
-      - serviceBearer: [
-          ]
+        - serviceBearer: []
     delete:
       operationId: cancelGeneration
       tags:
-      - AiGeneration
+        - AiGeneration
       summary: Request cancellation without assuming zero cost
       responses:
         '202':
@@ -354,17 +358,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
-      - { name: X-Dispatch-Token, in: header, required: false, schema: { type: string, format: uuid } }
-      - { name: X-Assistant-Instance-ID, in: header, required: false, schema: { type: string, format: uuid } }
-      - name: requestId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Dispatch-Token
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: X-Assistant-Instance-ID
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       security:
-      - serviceBearer: [
-          ]
+        - serviceBearer: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -380,28 +393,44 @@ paths:
         schema:
           type: string
           format: uuid
-
   /internal/ai/generations/{requestId}/detach:
     post:
       operationId: detachGeneration
-      tags: [AiGeneration]
+      tags:
+        - AiGeneration
       summary: Keep the original bounded execution alive for content-free final usage
-      description: Authenticated opt-in after durable user Stop. Idempotent for the same
-        request, dispatch token and assistant instance. Acknowledgement allows provider
-        execution to survive internal transport loss until its ORIGINAL deadline and
-        limits. Discard all subsequent content, retain final usage until deadline plus
-        ten minutes. No new invocation, deadline extension or capacity exemption.
-        A restart loses process-local evidence; absent evidence never proves zero cost.
+      description: >-
+        Authenticated opt-in after durable user Stop. Idempotent for the same request, dispatch token and
+        assistant instance. Acknowledgement allows provider execution to survive internal transport loss until
+        its ORIGINAL deadline and limits. Discard all subsequent content, retain final usage until deadline
+        plus ten minutes. No new invocation, deadline extension or capacity exemption. A restart loses
+        process-local evidence; absent evidence never proves zero cost.
       parameters:
-      - { name: requestId, in: path, required: true, schema: { type: string, format: uuid } }
-      - { name: X-Dispatch-Token, in: header, required: true, schema: { type: string, format: uuid } }
-      - { name: X-Assistant-Instance-ID, in: header, required: true, schema: { type: string, format: uuid } }
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-Dispatch-Token
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-Assistant-Instance-ID
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: Original execution detached, or its retained terminal evidence
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/GenerationStatus' }
+              schema:
+                $ref: '#/components/schemas/GenerationStatus'
         '401':
           description: Service authentication required
         '404':
@@ -409,7 +438,7 @@ paths:
         '409':
           description: Dispatch or instance mismatch
       security:
-      - serviceBearer: []
+        - serviceBearer: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -425,7 +454,6 @@ paths:
         schema:
           type: string
           format: uuid
-
 components:
   securitySchemes:
     serviceBearer:
@@ -435,33 +463,36 @@ components:
     ModelCapabilities:
       type: object
       additionalProperties: false
-      description: A versioned snapshot for one configured model and LOW thinking.
-        Each execution limit must be verified independently. The backend additionally
-        applies its own lower transport limits and owns prices and monetary policy.
+      description: >-
+        A versioned snapshot for one configured model and LOW thinking. Each execution limit must be verified
+        independently. The backend additionally applies its own lower transport limits and owns prices and
+        monetary policy.
       required:
-      - schemaVersion
-      - profileHash
-      - model
-      - modelRevision
-      - providerInputTokenLimit
-      - providerOutputTokenLimit
-      - maxInputTokens
-      - maxOutputTokens
-      - billableOutputTokenUpperBound
-      - thinkingMode
-      - maxPrepareRequestBytes
-      - maxGeneratedTextBytes
-      - verifiedAt
-      - expiresAt
+        - schemaVersion
+        - profileHash
+        - model
+        - modelRevision
+        - providerInputTokenLimit
+        - providerOutputTokenLimit
+        - maxInputTokens
+        - maxOutputTokens
+        - billableOutputTokenUpperBound
+        - thinkingMode
+        - maxPrepareRequestBytes
+        - maxGeneratedTextBytes
+        - verifiedAt
+        - expiresAt
       properties:
         schemaVersion:
           type: integer
-          enum: [1]
+          enum:
+            - 1
         profileHash:
           type: string
-          pattern: '^[a-f0-9]{64}$'
-          description: Lowercase SHA-256 over RFC 8785 canonical JSON of all
-            other properties in this object. Omit absent optional properties.
+          pattern: ^[a-f0-9]{64}$
+          description: >-
+            Lowercase SHA-256 over RFC 8785 canonical JSON of all other properties in this object. Omit absent
+            optional properties.
         model:
           type: string
         modelRevision:
@@ -475,8 +506,9 @@ components:
         providerCombinedTokenLimit:
           type: integer
           minimum: 1
-          description: Include only when the provider's combined input/output
-            constraint has been verified for this model and endpoint.
+          description: >-
+            Include only when the provider's combined input/output constraint has been verified for this model
+            and endpoint.
         maxInputTokens:
           type: integer
           minimum: 1
@@ -489,11 +521,13 @@ components:
           type: integer
           format: int64
           minimum: 1
-          description: Conservative upper bound on all billed output and thinking
-            tokens together, for any output setting allowed by this profile.
+          description: >-
+            Conservative upper bound on all billed output and thinking tokens together, for any output setting
+            allowed by this profile.
         thinkingMode:
           type: string
-          enum: [LOW]
+          enum:
+            - LOW
         maxPrepareRequestBytes:
           type: integer
           minimum: 1
@@ -515,23 +549,23 @@ components:
         code:
           type: string
           enum:
-          - UNAUTHENTICATED
-          - FORBIDDEN
-          - NOT_FOUND
-          - INVALID_INPUT
-          - IDEMPOTENCY_CONFLICT
-          - USER_BUSY
-          - STREAM_BUSY
-          - STREAM_REQUIRED
-          - RETRY_NOT_ALLOWED
-          - RESOURCE_LIMIT
-          - BUDGET_UNAVAILABLE
-          - AI_UNAVAILABLE
-          - CONTEXT_TOO_LARGE
-          - PROVIDER_FAILURE
-          - OUTCOME_UNCERTAIN
-          - REQUEST_EXPIRED
-          - INTERNAL_ERROR
+            - UNAUTHENTICATED
+            - FORBIDDEN
+            - NOT_FOUND
+            - INVALID_INPUT
+            - IDEMPOTENCY_CONFLICT
+            - USER_BUSY
+            - STREAM_BUSY
+            - STREAM_REQUIRED
+            - RETRY_NOT_ALLOWED
+            - RESOURCE_LIMIT
+            - BUDGET_UNAVAILABLE
+            - AI_UNAVAILABLE
+            - CONTEXT_TOO_LARGE
+            - PROVIDER_FAILURE
+            - OUTCOME_UNCERTAIN
+            - REQUEST_EXPIRED
+            - INTERNAL_ERROR
         message:
           type: string
         requestId:
@@ -540,22 +574,22 @@ components:
         retryAllowed:
           type: boolean
       required:
-      - code
-      - message
-      - retryAllowed
+        - code
+        - message
+        - retryAllowed
     ExecutionState:
       type: string
       enum:
-      - AWAITING_STREAM
-      - PREPARING
-      - DISPATCHING
-      - STREAMING
-      - CANCEL_REQUESTED
-      - COMPLETED
-      - FAILED
-      - CANCELLED
-      - INTERRUPTED
-      - UNKNOWN
+        - AWAITING_STREAM
+        - PREPARING
+        - DISPATCHING
+        - STREAMING
+        - CANCEL_REQUESTED
+        - COMPLETED
+        - FAILED
+        - CANCELLED
+        - INTERRUPTED
+        - UNKNOWN
     ContextMessage:
       type: object
       additionalProperties: false
@@ -563,26 +597,20 @@ components:
         role:
           type: string
           enum:
-          - SYSTEM
-          - USER
-          - ASSISTANT
+            - SYSTEM
+            - USER
+            - ASSISTANT
         content:
           type: string
       required:
-      - role
-      - content
+        - role
+        - content
     PrepareGeneration:
       type: object
       additionalProperties: false
       properties:
-        intermediateOutput:
-          $ref: '#/components/schemas/IntermediateOutputContext'
-        automaticStep:
-          $ref: '#/components/schemas/AutomaticStepContext'
-        routingContext:
-          $ref: '#/components/schemas/RoutingContext'
         responseLanguage:
-          $ref: '../services/chat-v1.yaml#/components/schemas/ResponseLanguage'
+          $ref: ../services/chat-v1.yaml#/components/schemas/ResponseLanguage
         requestId:
           type: string
           format: uuid
@@ -594,9 +622,10 @@ components:
           type: string
         profileHash:
           type: string
-          pattern: '^[a-f0-9]{64}$'
-          description: Required for capability-aware callers. The assistant must
-            reject an expired or mismatched profile before token counting.
+          pattern: ^[a-f0-9]{64}$
+          description: >-
+            Required for capability-aware callers. The assistant must reject an expired or mismatched profile
+            before token counting.
         messages:
           type: array
           items:
@@ -610,45 +639,34 @@ components:
           type: string
           format: date-time
       required:
-      - responseLanguage
-      - requestId
-      - model
-      - systemPromptVersion
-      - contextHash
-      - messages
-      - maxOutputTokens
-      - thinkingMode
-      - deadline
-      description: Token counting and validation only, never generation. Context hash
-        is SHA-256 over RFC 8785 canonical JSON of model, systemPromptVersion, messages,
-        maxOutputTokens, thinkingMode, responseLanguage, profileHash
-        and routingContext/automaticStep/intermediateOutput when supplied. Absent optional fields preserve the previous hash protocol.
-        The plan binds these exact values. Enforce
-        size and deadline limits; tools/caching/multiple candidates are forbidden
-        in V1. The backend supplies a SYSTEM message selecting this language before
-        token counting; the assistant validates the language instruction and retains
-        the exact prepared messages for dispatch. Never append an uncounted language
-        instruction at generation time. Language is fixed for this request; switching
-        the GUI cannot alter an accepted plan or active generation.
+        - responseLanguage
+        - requestId
+        - model
+        - systemPromptVersion
+        - contextHash
+        - messages
+        - maxOutputTokens
+        - thinkingMode
+        - deadline
+      description: >-
+        Token counting and validation only. Context hash is SHA-256 over canonical JSON of model,
+        systemPromptVersion, messages, maxOutputTokens, thinkingMode, responseLanguage and optional
+        profileHash. The single-use plan binds the counted messages and verified bounds. Enforce size and
+        deadline limits before counting; never append uncounted instructions at generation.
     PreparedGeneration:
       type: object
       additionalProperties: false
       properties:
-        intermediateOutput:
-          $ref: '#/components/schemas/IntermediateOutputContext'
-        automaticStep:
-          $ref: '#/components/schemas/AutomaticStepContext'
-        routingContext:
-          $ref: '#/components/schemas/RoutingContext'
         planToken:
           type: string
         contextHash:
           type: string
         profileHash:
           type: string
-          pattern: '^[a-f0-9]{64}$'
-          description: Echo the exact verified profile when supplied at preparation.
-            Its expiry also limits the lifetime of the dispatch plan.
+          pattern: ^[a-f0-9]{64}$
+          description: >-
+            Echo the exact verified profile when supplied at preparation. Its expiry also limits the lifetime
+            of the dispatch plan.
         modelRevision:
           type: string
         inputTokens:
@@ -662,33 +680,27 @@ components:
         boundKind:
           type: string
           enum:
-          - VERIFIED_MODEL_LIMIT
+            - VERIFIED_MODEL_LIMIT
         expiresAt:
           type: string
           format: date-time
       required:
-      - planToken
-      - contextHash
-      - modelRevision
-      - inputTokens
-      - billableOutputTokenUpperBound
-      - boundKind
-      - expiresAt
-      description: 'Opaque, single-use, process-local prepared plan expires within
-        30 seconds. Assistant restart invalidates it before any provider call. Counting
-        must be exact or a documented conservative upper bound. Failure to prove the
-        billable output/thinking bound returns AI_UNAVAILABLE. No price authority:
-        backend owns prices and money.'
+        - planToken
+        - contextHash
+        - modelRevision
+        - inputTokens
+        - billableOutputTokenUpperBound
+        - boundKind
+        - expiresAt
+      description: >-
+        Opaque, single-use, process-local prepared plan expires within 30 seconds. Assistant restart
+        invalidates it before any provider call. Counting must be exact or a documented conservative upper
+        bound. Failure to prove the billable output/thinking bound returns AI_UNAVAILABLE. No price authority:
+        backend owns prices and money.
     DispatchGeneration:
       type: object
       additionalProperties: false
       properties:
-        intermediateOutput:
-          $ref: '#/components/schemas/IntermediateOutputContext'
-        automaticStep:
-          $ref: '#/components/schemas/AutomaticStepContext'
-        routingContext:
-          $ref: '#/components/schemas/RoutingContext'
         dispatchToken:
           type: string
           format: uuid
@@ -700,104 +712,13 @@ components:
           type: string
           format: date-time
       required:
-      - dispatchToken
-      - planToken
-      - contextHash
-      - deadline
+        - dispatchToken
+        - planToken
+        - contextHash
+        - deadline
       description: >-
-        intermediateOutput, automaticStep and routingContext must be present exactly when supplied during preparation
-        and match every field. The plan token and context hash bind it as well as the
-        selected output size and profile. Mismatch is rejected before provider
-        invocation. Dispatch retains its existing single-use/no-retry semantics.
-    IntermediateOutputContext:
-      type: object
-      additionalProperties: false
-      required: [kind, schemaVersion, immediateInputKeys, originalSourceIds, digest]
-      description: >-
-        Backend-owned intermediate result constraint derived only from the frozen,
-        authorized plan. Required for automatic LEAF/MERGE and their count-only
-        preparation; forbidden for other kinds. Never extracted from prompt text
-        or untrusted model output. LEAF keys are original source UUID strings;
-        MERGE keys are immediate dependency ordinals as canonical decimal strings.
-        Keys retain plan order, source UUIDs are distinct and sorted lexically.
-        Digest is lowercase SHA-256 of canonical JSON with sorted keys of kind,
-        schemaVersion, immediateInputKeys and originalSourceIds (excluding digest).
-        The whole context is included in contextHash, copied into the single-use
-        plan and echoed unchanged in preparation and dispatch. It is no authority
-        for sources or another call. The backend still checks ownership and scope.
-        Schema drive-evidence-v2 has exactly complete (boolean), coveredInputs
-        (ordered string array equal to immediateInputKeys), evidence (objects with
-        text and nonempty original sourceIds), and limitations (string array).
-        Provider schema uses singleton string enums in coveredInputs.prefixItems,
-        minItems=maxItems=key count, and sourceIds.items.enum=originalSourceIds.
-        All object fields are required, additionalProperties=false; complete=true
-        and semantic validity remain backend checks. No uniqueItems or boolean enum.
-        Count and generation use identical schema/MIME/output/thinking settings.
-        Expanded schema bytes count toward preparation and context memory limits;
-        over-limit requests fail before counting or dispatch, without schema fallback.
-      properties:
-        kind: { type: string, enum: [LEAF, MERGE] }
-        schemaVersion: { type: string, enum: [drive-evidence-v2] }
-        immediateInputKeys:
-          type: array
-          minItems: 1
-          items: { type: string, minLength: 1, maxLength: 36 }
-        originalSourceIds:
-          type: array
-          minItems: 1
-          items: { type: string, pattern: '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$' }
-        digest: { type: string, pattern: '^[a-f0-9]{64}$' }
-    AutomaticStepContext:
-      type: object
-      additionalProperties: false
-      required: [parentRequestId, planHash, nodeHash, ordinal, kind, modelConfigHash]
-      description: Trusted backend correlation for one automatic chat child. Mutually exclusive with routingContext. Requires profileHash; requestId differs from parentRequestId. Included in canonical context hash, echoed unchanged in preparation and dispatch. One prepared call only, no tools, retries or workflow orchestration. CHAT uses auto-plan-chat-v1, DIRECT/FINAL use drive-analysis-v3, LEAF/MERGE require drive-analysis-v4 and intermediateOutput with matching kind. Old intermediate plans are rejected; no in-place migration or retry. LEAF/MERGE outputs are buffered and strictly validated by the backend before reuse.
-      properties:
-        parentRequestId: { type: string, format: uuid }
-        planHash: { type: string, pattern: '^[a-f0-9]{64}$' }
-        nodeHash: { type: string, pattern: '^[a-f0-9]{64}$' }
-        modelConfigHash: { type: string, pattern: '^[a-f0-9]{64}$' }
-        ordinal: { type: integer, format: int64, minimum: 0 }
-        kind: { type: string, enum: [CHAT, DIRECT, LEAF, MERGE, FINAL] }
-    RoutingContext:
-      type: object
-      additionalProperties: false
-      required: [parentRequestId, modelConfigHash, historyHash]
-      description: >-
-        Trusted backend correlation for one internal routing child. Requires
-        profileHash and systemPromptVersion routing-json-v2; mutually exclusive with
-        automaticStep. The child requestId differs from parentRequestId. Included
-        in the canonical context hash, frozen at preparation and echoed in the
-        preparation response and dispatch. Dispatch must match every field.
-        No browser routing endpoint or authorization is introduced. The model
-        receives only the already counted messages, never this metadata as an
-        additional prompt. Old calls omit routingContext and retain their hash.
-        A routing response is one strict RoutingDecision JSON object, buffered
-        and validated before any delta is exposed. No tools or repair retry.
-        The provider is configured for schema-constrained JSON matching the
-        generated RoutingDecision contract. Token counting includes that schema
-        and the same invocation settings used by generation. Legacy routing-v1
-        preparation is rejected before token counting or generation.
-      properties:
-        parentRequestId: { type: string, format: uuid }
-        modelConfigHash: { type: string, pattern: '^[a-f0-9]{64}$' }
-        historyHash: { type: string, pattern: '^[a-f0-9]{64}$' }
-    RoutingDecision:
-      type: object
-      additionalProperties: false
-      required: [route, documentNeed, coverageNeed, scope]
-      description: >-
-        Untrusted model proposal, validated and resolved by the backend. It cannot
-        select arbitrary files, grant permissions, execute tools or set prices.
-        Uncertainty is handled by conservative server-side routing and scope,
-        never a user mode/scope choice or a per-request cost confirmation.
-        Relevant results do not prove complete coverage. Protocol errors stop
-        without a paid repair call. No free-text reasoning or confidence score.
-      properties:
-        route: { type: string, enum: [NO_DOCUMENTS, RELEVANT_SEARCH, FULL_SCOPE, UNCERTAIN] }
-        documentNeed: { type: string, enum: [NONE, REQUIRED, UNCERTAIN] }
-        coverageNeed: { type: string, enum: [TARGETED, COMPLETE, UNCERTAIN] }
-        scope: { type: string, enum: [AUTHORIZED_ROOT, PRIOR_SCOPE, UNCERTAIN] }
+        Dispatch the exact prepared context once. The single-use plan token and context hash bind messages,
+        model, output limit and verified profile. No automatic paid retry.
     ProviderUsage:
       type: object
       additionalProperties: false
@@ -825,16 +746,17 @@ components:
         complete:
           type: boolean
       required:
-      - inputTokens
-      - outputTokens
-      - thinkingTokens
-      - cachedInputTokens
-      - modelRevision
-      - complete
-      description: Normalized non-overlapping billable categories. outputTokens excludes
-        separately reported thinkingTokens. Adapter must verify raw provider semantics;
-        never subtract an unverified field or treat missing usage as zero. complete=true
-        only for authoritative final usage. Prices are backend-owned.
+        - inputTokens
+        - outputTokens
+        - thinkingTokens
+        - cachedInputTokens
+        - modelRevision
+        - complete
+      description: >-
+        Normalized non-overlapping billable categories. outputTokens excludes separately reported
+        thinkingTokens. Adapter must verify raw provider semantics; never subtract an unverified field or
+        treat missing usage as zero. complete=true only for authoritative final usage. Prices are
+        backend-owned.
     GenerationStatus:
       type: object
       additionalProperties: false
@@ -858,14 +780,14 @@ components:
         state:
           type: string
           enum:
-          - ACCEPTED
-          - PROVIDER_INVOKED
-          - STREAMING
-          - COMPLETED
-          - FAILED
-          - CANCEL_REQUESTED
-          - CANCELLED
-          - UNKNOWN
+            - ACCEPTED
+            - PROVIDER_INVOKED
+            - STREAMING
+            - COMPLETED
+            - FAILED
+            - CANCEL_REQUESTED
+            - CANCELLED
+            - UNKNOWN
         providerInvoked:
           type: boolean
         executionConfirmedEnded:
@@ -873,32 +795,32 @@ components:
         usage:
           $ref: '#/components/schemas/ProviderUsage'
       required:
-      - requestId
-      - dispatchToken
-      - assistantInstanceId
-      - state
-      - providerInvoked
-      - executionConfirmedEnded
-      description: Process-local evidence only. Missing entry/404 after assistant
-        restart proves nothing about an earlier provider invocation. No prompt or
-        response text is returned. Execution completion and final usage completeness
-        are independent.
+        - requestId
+        - dispatchToken
+        - assistantInstanceId
+        - state
+        - providerInvoked
+        - executionConfirmedEnded
+      description: >-
+        Process-local evidence only. Missing entry/404 after assistant restart proves nothing about an earlier
+        provider invocation. No prompt or response text is returned. Execution completion and final usage
+        completeness are independent.
     InternalStreamEvent:
-      description: SSE name equals type and JSON data uses this envelope. All events
-        bind the durable dispatch token and assistant process ID. delta requires delta.
-        Terminal events carry executionConfirmedEnded and usage only if authoritative.
-        A failed event before provider invocation must explicitly confirm no invocation;
-        otherwise backend stays conservative. Do not forward raw SDK exceptions. Terminal
-        events require providerInvoked and executionConfirmedEnded. accepted/provider-invoked
-        events report the corresponding boundary explicitly.
+      description: >-
+        SSE name equals type and JSON data uses this envelope. All events bind the durable dispatch token and
+        assistant process ID. delta requires delta. Terminal events carry executionConfirmedEnded and usage
+        only if authoritative. A failed event before provider invocation must explicitly confirm no
+        invocation; otherwise backend stays conservative. Do not forward raw SDK exceptions. Terminal events
+        require providerInvoked and executionConfirmedEnded. accepted/provider-invoked events report the
+        corresponding boundary explicitly.
       oneOf:
-      - $ref: '#/components/schemas/InternalAcceptedEvent'
-      - $ref: '#/components/schemas/InternalProviderInvokedEvent'
-      - $ref: '#/components/schemas/InternalDeltaEvent'
-      - $ref: '#/components/schemas/InternalCompletedEvent'
-      - $ref: '#/components/schemas/InternalFailedEvent'
-      - $ref: '#/components/schemas/InternalCancelledEvent'
-      - $ref: '#/components/schemas/InternalHeartbeatEvent'
+        - $ref: '#/components/schemas/InternalAcceptedEvent'
+        - $ref: '#/components/schemas/InternalProviderInvokedEvent'
+        - $ref: '#/components/schemas/InternalDeltaEvent'
+        - $ref: '#/components/schemas/InternalCompletedEvent'
+        - $ref: '#/components/schemas/InternalFailedEvent'
+        - $ref: '#/components/schemas/InternalCancelledEvent'
+        - $ref: '#/components/schemas/InternalHeartbeatEvent'
       discriminator:
         propertyName: type
         mapping:
@@ -916,7 +838,7 @@ components:
         type:
           type: string
           enum:
-          - accepted
+            - accepted
         requestId:
           type: string
           format: uuid
@@ -929,11 +851,11 @@ components:
         providerInvoked:
           type: boolean
       required:
-      - type
-      - requestId
-      - dispatchToken
-      - assistantInstanceId
-      - providerInvoked
+        - type
+        - requestId
+        - dispatchToken
+        - assistantInstanceId
+        - providerInvoked
     InternalProviderInvokedEvent:
       type: object
       additionalProperties: false
@@ -941,7 +863,7 @@ components:
         type:
           type: string
           enum:
-          - provider-invoked
+            - provider-invoked
         requestId:
           type: string
           format: uuid
@@ -954,11 +876,11 @@ components:
         providerInvoked:
           type: boolean
       required:
-      - type
-      - requestId
-      - dispatchToken
-      - assistantInstanceId
-      - providerInvoked
+        - type
+        - requestId
+        - dispatchToken
+        - assistantInstanceId
+        - providerInvoked
     InternalDeltaEvent:
       type: object
       additionalProperties: false
@@ -966,7 +888,7 @@ components:
         type:
           type: string
           enum:
-          - delta
+            - delta
         requestId:
           type: string
           format: uuid
@@ -979,11 +901,11 @@ components:
         delta:
           type: string
       required:
-      - type
-      - requestId
-      - dispatchToken
-      - assistantInstanceId
-      - delta
+        - type
+        - requestId
+        - dispatchToken
+        - assistantInstanceId
+        - delta
     InternalCompletedEvent:
       type: object
       additionalProperties: false
@@ -991,7 +913,7 @@ components:
         type:
           type: string
           enum:
-          - completed
+            - completed
         requestId:
           type: string
           format: uuid
@@ -1008,15 +930,15 @@ components:
         providerInvoked:
           type: boolean
       required:
-      - type
-      - requestId
-      - dispatchToken
-      - assistantInstanceId
-      - executionConfirmedEnded
-      - providerInvoked
-      description: Complete response text was delivered. Execution must be confirmed
-        ended. Authoritative usage is included when available; otherwise accounting
-        remains uncertain.
+        - type
+        - requestId
+        - dispatchToken
+        - assistantInstanceId
+        - executionConfirmedEnded
+        - providerInvoked
+      description: >-
+        Complete response text was delivered. Execution must be confirmed ended. Authoritative usage is
+        included when available; otherwise accounting remains uncertain.
     InternalFailedEvent:
       type: object
       additionalProperties: false
@@ -1024,7 +946,7 @@ components:
         type:
           type: string
           enum:
-          - failed
+            - failed
         requestId:
           type: string
           format: uuid
@@ -1043,13 +965,13 @@ components:
         problem:
           $ref: '#/components/schemas/Problem'
       required:
-      - type
-      - requestId
-      - dispatchToken
-      - assistantInstanceId
-      - executionConfirmedEnded
-      - providerInvoked
-      - problem
+        - type
+        - requestId
+        - dispatchToken
+        - assistantInstanceId
+        - executionConfirmedEnded
+        - providerInvoked
+        - problem
     InternalCancelledEvent:
       type: object
       additionalProperties: false
@@ -1057,7 +979,7 @@ components:
         type:
           type: string
           enum:
-          - cancelled
+            - cancelled
         requestId:
           type: string
           format: uuid
@@ -1074,12 +996,12 @@ components:
         providerInvoked:
           type: boolean
       required:
-      - type
-      - requestId
-      - dispatchToken
-      - assistantInstanceId
-      - executionConfirmedEnded
-      - providerInvoked
+        - type
+        - requestId
+        - dispatchToken
+        - assistantInstanceId
+        - executionConfirmedEnded
+        - providerInvoked
     InternalHeartbeatEvent:
       type: object
       additionalProperties: false
@@ -1087,7 +1009,7 @@ components:
         type:
           type: string
           enum:
-          - heartbeat
+            - heartbeat
         requestId:
           type: string
           format: uuid
@@ -1098,7 +1020,7 @@ components:
           type: string
           format: uuid
       required:
-      - type
-      - requestId
-      - dispatchToken
-      - assistantInstanceId
+        - type
+        - requestId
+        - dispatchToken
+        - assistantInstanceId

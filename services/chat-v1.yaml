@@ -2,27 +2,26 @@ openapi: 3.0.3
 info:
   title: Bandee Chat V1 - Browser API
   version: 0.2.0
-  description: 'All operations require the existing same-origin session. State-changing
-    operations require CSRF. GET never starts a provider call. Private responses use
-    Cache-Control: no-store. Registered and active guest principals use the same
-    ownership checks. Guest expiry is checked before protected operations and
-    dispatch, and while streaming. Session/CSRF/status polling and stream heartbeats
-    never renew guest activity; accepted user actions may renew it within its
-    absolute lifetime. Guest policy limits may be stricter than schema maxima.'
+  description: >-
+    All operations require the existing same-origin session. State-changing operations require CSRF. GET never
+    starts a provider call. Private responses use Cache-Control: no-store. Registered and active guest
+    principals use the same ownership checks. Guest expiry is checked before protected operations and
+    dispatch, and while streaming. Session/CSRF/status polling and stream heartbeats never renew guest
+    activity; accepted user actions may renew it within its absolute lifetime. Guest policy limits may be
+    stricter than schema maxima.
 security:
-- browserSession: [
-    ]
+  - browserSession: []
 tags:
-- name: ChatConversations
-- name: ChatRequests
-- name: ChatStreams
-- name: AiBudget
+  - name: ChatConversations
+  - name: ChatRequests
+  - name: ChatStreams
+  - name: AiBudget
 paths:
   /api/chat/conversations:
     get:
       operationId: listConversations
       tags:
-      - ChatConversations
+        - ChatConversations
       summary: List only owned conversations, newest activity first
       responses:
         '200':
@@ -74,29 +73,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
-      - name: cursor
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 1
-          maximum: 100
-          default: 20
-      description: Opaque cursor binds user, sort and last updatedAt/id pair. A concurrently
-        active conversation can move between pages; client deduplicates by id. Foreign
-        or malformed cursors fail without revealing ownership.
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      description: >-
+        Opaque cursor binds user, sort and last updatedAt/id pair. A concurrently active conversation can move
+        between pages; client deduplicates by id. Foreign or malformed cursors fail without revealing
+        ownership.
       security:
-      - browserSession: [
-          ]
+        - browserSession: []
     post:
       operationId: createConversation
       tags:
-      - ChatConversations
+        - ChatConversations
       summary: Create an empty owned conversation
       responses:
         '201':
@@ -148,15 +147,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
-      - name: X-CSRF-TOKEN
-        in: header
-        required: true
-        schema:
-          type: string
-        description: Obtain the session-bound token from the existing auth CSRF operation.
+        - name: X-CSRF-TOKEN
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Obtain the session-bound token from the existing auth CSRF operation.
       security:
-      - browserSession: [
-          ]
+        - browserSession: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -172,12 +170,11 @@ paths:
         schema:
           type: string
           format: uuid
-
   /api/chat/conversations/{conversationId}:
     get:
       operationId: getConversation
       tags:
-      - ChatConversations
+        - ChatConversations
       summary: Read an owned conversation
       responses:
         '200':
@@ -229,74 +226,81 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
-      - name: conversationId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       security:
-      - browserSession: [
-          ]
+        - browserSession: []
     patch:
       operationId: renameConversation
       tags:
-      - ChatConversations
+        - ChatConversations
       summary: Set the title of an owned conversation
       description: A manually set title takes precedence over automatic titles.
       security:
-      - browserSession: []
+        - browserSession: []
       parameters:
-      - name: conversationId
-        in: path
-        required: true
-        schema: { type: string, format: uuid }
-      - name: X-CSRF-TOKEN
-        in: header
-        required: true
-        schema: { type: string }
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-CSRF-TOKEN
+          in: header
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RenameConversation' }
+            schema:
+              $ref: '#/components/schemas/RenameConversation'
       responses:
         '200':
           description: Updated conversation
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Conversation' }
+              schema:
+                $ref: '#/components/schemas/Conversation'
         '400':
           description: Invalid title
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Problem' }
+              schema:
+                $ref: '#/components/schemas/Problem'
         '401':
           description: Authentication required
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Problem' }
+              schema:
+                $ref: '#/components/schemas/Problem'
         '403':
           description: Forbidden
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Problem' }
+              schema:
+                $ref: '#/components/schemas/Problem'
         '404':
           description: Conversation not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Problem' }
+              schema:
+                $ref: '#/components/schemas/Problem'
     delete:
       operationId: deleteConversation
       tags:
-      - ChatConversations
+        - ChatConversations
       summary: Delete conversation content while preserving financial and execution evidence
       description: >-
-        Reject active or financially unresolved requests. An execution-unconfirmed UNKNOWN
-        or CANCEL_REQUESTED request no longer prevents deletion when its accounting and
-        reservation are SETTLED, it has no user slot, and both its generation deadline plus
-        30 seconds and dispatch lease have expired. Fence late content writes before
-        deleting. Preserve the final charge, request/dispatch records and unconfirmed
+        Reject active or financially unresolved requests. An execution-unconfirmed UNKNOWN or CANCEL_REQUESTED
+        request no longer prevents deletion when its accounting and reservation are SETTLED, it has no user
+        slot, and both its generation deadline plus 30 seconds and dispatch lease have expired. Fence late
+        content writes before deleting. Preserve the final charge, request/dispatch records and unconfirmed
         execution evidence; elapsed time is not proof of provider completion.
       responses:
         '204':
@@ -344,21 +348,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
-      - name: conversationId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: X-CSRF-TOKEN
-        in: header
-        required: true
-        schema:
-          type: string
-        description: Obtain the session-bound token from the existing auth CSRF operation.
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-CSRF-TOKEN
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Obtain the session-bound token from the existing auth CSRF operation.
       security:
-      - browserSession: [
-          ]
+        - browserSession: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -374,12 +377,11 @@ paths:
         schema:
           type: string
           format: uuid
-
   /api/chat/conversations/{conversationId}/messages:
     get:
       operationId: listMessages
       tags:
-      - ChatConversations
+        - ChatConversations
       summary: Read an owned page; messages within a page are sequence-ascending
       responses:
         '200':
@@ -431,32 +433,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
-      - name: conversationId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: cursor
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 1
-          maximum: 100
-          default: 20
-      description: Initial page contains the latest messages, returned oldest-to-newest.
-        nextCursor loads earlier pages. Cursor is opaque and bound to authenticated
-        user and conversation. Attempts are separate assistant messages linked by
-        requestId; failed/partial attempts stay visible.
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      description: >-
+        Initial page contains the latest messages, returned oldest-to-newest. nextCursor loads earlier pages.
+        Cursor is opaque and bound to authenticated user and conversation. Attempts are separate assistant
+        messages linked by requestId; failed/partial attempts stay visible.
       security:
-      - browserSession: [
-          ]
+        - browserSession: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -472,14 +473,19 @@ paths:
         schema:
           type: string
           format: uuid
-
   /api/chat/conversations/{conversationId}/input-analyses:
     post:
       operationId: createInputAnalysis
       tags:
-      - ChatRequests
+        - ChatRequests
       summary: Accept one paid voice review or first-question title task without starting generation
       responses:
+        '200':
+          description: Previously accepted identical request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestStatus'
         '201':
           description: Success
           content:
@@ -528,12 +534,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
-        '200':
-          description: Previously accepted identical request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RequestStatus'
       requestBody:
         required: true
         content:
@@ -541,36 +541,32 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateInputAnalysis'
       parameters:
-      - name: conversationId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: X-CSRF-TOKEN
-        in: header
-        required: true
-        schema:
-          type: string
-        description: Obtain the session-bound token from the existing auth CSRF operation.
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-CSRF-TOKEN
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Obtain the session-bound token from the existing auth CSRF operation.
       description: >-
-        Acquires the same per-user execution slot and enforces the same global,
-        personal and guest limits as chat. Idempotency keys share the chat request
-        namespace; changed purpose, content, conversation or language is a conflict.
-        VOICE_REVIEW is the shared review mode for typed questions and speech
-        transcripts; its historical name is retained for compatibility. It requires
-        nonblank content. FIRST_TITLE forbids content and reads
-        the first saved user message server-side. FIRST_TITLE is accepted only when
-        that message has no applied AI title and no successful or unresolved title task.
-        A deliberate retry must be explicit and use a new idempotency key after a
-        confirmed failed attempt; no automatic paid replay is allowed. Acceptance
-        itself never invokes the provider. Use the existing request stream and start
-        operations to execute; auxiliary streams emit lifecycle events but no raw
-        model-output deltas. The validated result is available separately only after
-        confirmed completion. No chat messages are created by an analysis task.
+        Acquires the same per-user execution slot and enforces the same global, personal and guest limits as
+        chat. Idempotency keys share the chat request namespace; changed purpose, content, conversation or
+        language is a conflict. VOICE_REVIEW is the shared review mode for typed questions and speech
+        transcripts; its historical name is retained for compatibility. It requires nonblank content.
+        FIRST_TITLE forbids content and reads the first saved user message server-side. FIRST_TITLE is
+        accepted only when that message has no applied AI title and no successful or unresolved title task. A
+        deliberate retry must be explicit and use a new idempotency key after a confirmed failed attempt; no
+        automatic paid replay is allowed. Acceptance itself never invokes the provider. Use the existing
+        request stream and start operations to execute; auxiliary streams emit lifecycle events but no raw
+        model-output deltas. The validated result is available separately only after confirmed completion. No
+        chat messages are created by an analysis task.
       security:
-      - browserSession: [
-          ]
+        - browserSession: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -586,23 +582,27 @@ paths:
         schema:
           type: string
           format: uuid
-
   /api/chat/conversations/{conversationId}/input-analyses/discard:
     post:
       operationId: discardInputAnalysis
       tags:
-      - ChatRequests
+        - ChatRequests
       summary: Resolve an uncertain analysis submission and stop its original task
       description: >-
-        Atomically resolves the original clientRequestId and detaches only that
-        auxiliary task. Never starts a provider call or creates/deletes a chat turn.
-        Existing reservation, if any, is charged conservatively in full through the
-        existing interruption rules. Unknown execution is not proof of zero cost.
-        Repeating the same original payload is idempotent; mismatched payload is 409.
-        The discard query parameter defaults to true: true erases auxiliary private
-        input/output; false retains it for inspection without making an incomplete
-        result eligible for automatic submission. No automatic paid retry occurs.
+        Atomically resolves the original clientRequestId and detaches only that auxiliary task. Never starts a
+        provider call or creates/deletes a chat turn. Existing reservation, if any, is charged conservatively
+        in full through the existing interruption rules. Unknown execution is not proof of zero cost.
+        Repeating the same original payload is idempotent; mismatched payload is 409. The discard query
+        parameter defaults to true: true erases auxiliary private input/output; false retains it for
+        inspection without making an incomplete result eligible for automatic submission. No automatic paid
+        retry occurs.
       responses:
+        '200':
+          description: Previously accepted identical request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestStatus'
         '202':
           description: Success
           content:
@@ -651,12 +651,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
-        '200':
-          description: Previously accepted identical request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RequestStatus'
       requestBody:
         required: true
         content:
@@ -664,38 +658,38 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateInputAnalysis'
       parameters:
-      - name: discard
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: true
-        description: False resolves a technical interruption while preserving auxiliary input and partial output.
-      - name: reconcileCost
-        in: query
-        required: false
-        description: With discard=true, book the pending reservation as an estimate,
-          release the user slot and reconcile only the original execution in the background.
-          Never dispatch again. False preserves legacy final full-reservation charging.
-          True with discard=false is invalid. Already measured charges are preserved.
-        schema:
-          type: boolean
-          default: false
-      - name: conversationId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: X-CSRF-TOKEN
-        in: header
-        required: true
-        schema:
-          type: string
-        description: Obtain the session-bound token from the existing auth CSRF operation.
+        - name: discard
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: False resolves a technical interruption while preserving auxiliary input and partial output.
+        - name: reconcileCost
+          in: query
+          required: false
+          description: >-
+            With discard=true, book the pending reservation as an estimate, release the user slot and
+            reconcile only the original execution in the background. Never dispatch again. False preserves
+            legacy final full-reservation charging. True with discard=false is invalid. Already measured
+            charges are preserved.
+          schema:
+            type: boolean
+            default: false
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-CSRF-TOKEN
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Obtain the session-bound token from the existing auth CSRF operation.
       security:
-      - browserSession: [
-          ]
+        - browserSession: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -711,24 +705,25 @@ paths:
         schema:
           type: string
           format: uuid
-
   /api/chat/input-analyses/{requestId}:
     get:
       operationId: getInputAnalysis
-      tags: [ChatRequests]
+      tags:
+        - ChatRequests
       summary: Read the validated result of an owned, completed auxiliary task
       description: >-
-        Private content; Cache-Control no-store. GET never generates or charges.
-        Return 409 unless execution is confirmed COMPLETED and a validated result
-        exists. Return 404 for foreign, deleted or discarded results. An interrupted
-        result is never treated as approved input. An expired guest cannot read it.
+        Private content; Cache-Control no-store. GET never generates or charges. Return 409 unless execution
+        is confirmed COMPLETED and a validated result exists. Return 404 for foreign, deleted or discarded
+        results. An interrupted result is never treated as approved input. An expired guest cannot read it.
       security:
-      - browserSession: []
+        - browserSession: []
       parameters:
-      - name: requestId
-        in: path
-        required: true
-        schema: {type: string, format: uuid}
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: Validated analysis; never raw provider output
@@ -787,15 +782,19 @@ paths:
         schema:
           type: string
           format: uuid
-
   /api/chat/conversations/{conversationId}/requests:
     post:
       operationId: createChatRequest
       tags:
-      - ChatRequests
-      summary: Persist one user turn or explicit retry; acquire user slot without
-        calling Gemini
+        - ChatRequests
+      summary: Persist one user turn or explicit retry; acquire user slot without calling Gemini
       responses:
+        '200':
+          description: Previously accepted identical request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestStatus'
         '201':
           description: Success
           content:
@@ -844,12 +843,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
-        '200':
-          description: Previously accepted identical request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RequestStatus'
       requestBody:
         required: true
         content:
@@ -857,23 +850,23 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateRequest'
       parameters:
-      - name: conversationId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: X-CSRF-TOKEN
-        in: header
-        required: true
-        schema:
-          type: string
-        description: Obtain the session-bound token from the existing auth CSRF operation.
-      description: An identical repeated clientRequestId returns 200 with the existing
-        request; a new request returns 201. No paid execution occurs here.
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-CSRF-TOKEN
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Obtain the session-bound token from the existing auth CSRF operation.
+      description: >-
+        An identical repeated clientRequestId returns 200 with the existing request; a new request returns
+        201. No paid execution occurs here.
       security:
-      - browserSession: [
-          ]
+        - browserSession: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -889,25 +882,28 @@ paths:
         schema:
           type: string
           format: uuid
-
   /api/chat/conversations/{conversationId}/requests/discard:
     post:
       operationId: discardChatRequest
       tags:
-      - ChatRequests
+        - ChatRequests
       summary: Resolve an in-flight creation using its original idempotency key and payload
       description: >-
-        Atomically resolve or fence the original creation and apply the selected interruption policy.
-        Uses the same CreateRequest and clientRequestId, never a new idempotency key.
-        No model call is started. Late create replays return the resolved status.
-        Existing reserved usage is permanently charged in full; the user slot is released
-        independently of background provider termination. Content is deleted by default;
-        discard=false preserves the question and partial answer for technical recovery.
-        For an analysis parent, apply the same policy to every created child
-        reservation and fence all descendant content writes. Release only the
-        unused plan envelope that has never transferred into a child reservation.
-        Do not create a second parent usage charge.
+        Atomically resolve or fence the original creation and apply the selected interruption policy. Uses the
+        same CreateRequest and clientRequestId, never a new idempotency key. No model call is started. Late
+        create replays return the resolved status. Existing reserved usage is permanently charged in full; the
+        user slot is released independently of background provider termination. Content is deleted by default;
+        discard=false preserves the question and partial answer for technical recovery. For an analysis
+        parent, apply the same policy to every created child reservation and fence all descendant content
+        writes. Release only the unused plan envelope that has never transferred into a child reservation. Do
+        not create a second parent usage charge.
       responses:
+        '200':
+          description: Previously accepted identical request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestStatus'
         '202':
           description: Success
           content:
@@ -956,12 +952,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
-        '200':
-          description: Previously accepted identical request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RequestStatus'
       requestBody:
         required: true
         content:
@@ -969,38 +959,38 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateRequest'
       parameters:
-      - name: discard
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: true
-        description: False resolves a technical interruption while preserving question and partial answer.
-      - name: reconcileCost
-        in: query
-        required: false
-        description: With discard=true, book the pending reservation as an estimate,
-          release the user slot and reconcile only the original execution in the background.
-          Never dispatch again. False preserves legacy final full-reservation charging.
-          True with discard=false is invalid. Already measured charges are preserved.
-        schema:
-          type: boolean
-          default: false
-      - name: conversationId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: X-CSRF-TOKEN
-        in: header
-        required: true
-        schema:
-          type: string
-        description: Obtain the session-bound token from the existing auth CSRF operation.
+        - name: discard
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: False resolves a technical interruption while preserving question and partial answer.
+        - name: reconcileCost
+          in: query
+          required: false
+          description: >-
+            With discard=true, book the pending reservation as an estimate, release the user slot and
+            reconcile only the original execution in the background. Never dispatch again. False preserves
+            legacy final full-reservation charging. True with discard=false is invalid. Already measured
+            charges are preserved.
+          schema:
+            type: boolean
+            default: false
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-CSRF-TOKEN
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Obtain the session-bound token from the existing auth CSRF operation.
       security:
-      - browserSession: [
-          ]
+        - browserSession: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -1016,12 +1006,11 @@ paths:
         schema:
           type: string
           format: uuid
-
   /api/chat/requests/{requestId}:
     get:
       operationId: getChatRequest
       tags:
-      - ChatRequests
+        - ChatRequests
       summary: Read status, including after a lost response
       responses:
         '200':
@@ -1073,68 +1062,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
-      - name: requestId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      security:
-      - browserSession: [
-          ]
-    parameters:
-      - name: X-Bandee-Trace-ID
-        in: header
-        required: false
-        description: Opaque owned trace correlation; never authorization.
-        schema:
-          type: string
-          format: uuid
-      - name: X-Bandee-Parent-Span
-        in: header
-        required: false
-        description: Calling span correlation; never authorization.
-        schema:
-          type: string
-          format: uuid
-
-  /api/chat/requests/{requestId}/drive-sources:
-    get:
-      operationId: listChatDriveSources
-      tags: [ChatRequests]
-      summary: List the Drive sources cited in this answer
-      description: The cursor belongs to this answer and account. The response includes citation metadata only.
-      security:
-        - browserSession: []
-      parameters:
         - name: requestId
           in: path
           required: true
-          schema: { type: string, format: uuid }
-        - name: cursor
-          in: query
-          schema: { type: string, format: uuid }
-      responses:
-        '200':
-          description: One page of cited Drive sources
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/ChatDriveSourcePage' }
-        '400':
-          description: Invalid cursor
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Problem' }
-        '401':
-          description: Session required
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Problem' }
-        '404':
-          description: Request unavailable to the current account
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Problem' }
+          schema:
+            type: string
+            format: uuid
+      security:
+        - browserSession: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -1150,12 +1085,11 @@ paths:
         schema:
           type: string
           format: uuid
-
   /api/chat/requests/{requestId}/stream:
     get:
       operationId: readChatStream
       tags:
-      - ChatStreams
+        - ChatStreams
       summary: Attach one read-only subscriber; emit ready before explicit start
       responses:
         '200':
@@ -1207,76 +1141,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
-      - name: requestId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      description: 'This GET never prepares, reserves or generates. Another attached
-        subscriber is 409. Terminal requests produce a terminal snapshot, without
-        replaying deltas. No automatic reconnect. A lost active stream initiates cancellation.
-        Cache-Control: no-store; X-Accel-Buffering: no. Status errors before stream
-        headers are JSON; errors afterwards are sanitized terminal events when possible.
-        For an analysis parent only final-answer deltas are public; intermediate
-        results never appear as chat messages. Paused workflow status may close the
-        stream without authorizing continuation. An active stream loss interrupts
-        the whole workflow and forbids new child dispatch until explicit continuation.'
-      security:
-      - browserSession: [
-          ]
-    parameters:
-      - name: X-Bandee-Trace-ID
-        in: header
-        required: false
-        description: Opaque owned trace correlation; never authorization.
-        schema:
-          type: string
-          format: uuid
-      - name: X-Bandee-Parent-Span
-        in: header
-        required: false
-        description: Calling span correlation; never authorization.
-        schema:
-          type: string
-          format: uuid
-
-  /api/chat/requests/{requestId}/continue:
-    post:
-      operationId: continueAutomaticChat
-      tags: [ChatRequests]
-      summary: Explicitly continue the same fixed automatic chat plan after technical interruption
-      description: Never re-routes, re-plans or changes models/scope. Already charged routing and completed nodes are not repeated. A new attempt requires remaining-plan funding. Source, price, profile, month and unresolved execution checks may block continuation. Repeating an action UUID only reads its saved outcome.
-      security:
-        - browserSession: []
-      parameters:
         - name: requestId
           in: path
           required: true
-          schema: { type: string, format: uuid }
-        - name: X-CSRF-TOKEN
-          in: header
-          required: true
-          schema: { type: string }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ContinueAutomaticChat'
-      responses:
-        '202':
-          description: Accepted continuation or saved state
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RequestStatus'
-        '409':
-          description: Fixed plan cannot safely continue
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          schema:
+            type: string
+            format: uuid
+      description: >-
+        This GET never prepares, reserves or generates. Another attached subscriber is 409. Terminal requests
+        produce a terminal snapshot, without replaying deltas. No automatic reconnect. A lost active stream
+        initiates cancellation. Cache-Control: no-store; X-Accel-Buffering: no. Status errors before stream
+        headers are JSON; errors afterwards are sanitized terminal events when possible.
+      security:
+        - browserSession: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -1292,12 +1169,11 @@ paths:
         schema:
           type: string
           format: uuid
-
   /api/chat/requests/{requestId}/start:
     post:
       operationId: startChatRequest
       tags:
-      - ChatRequests
+        - ChatRequests
       summary: Idempotently prepare, reserve and claim dispatch with an attached subscriber
       responses:
         '202':
@@ -1349,27 +1225,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
-      - name: requestId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: X-CSRF-TOKEN
-        in: header
-        required: true
-        schema:
-          type: string
-        description: Obtain the session-bound token from the existing auth CSRF operation.
-      description: Returns 202 quickly after accepting the orchestration task; inspect
-        SSE/status for preparation, reservation or provider errors. Repeated start
-        never redispatches. Before dispatch, lack of a live stream terminates without
-        a provider call. Restart never automatically replays a durable dispatch claim.
-        Retired manual analysis requests cannot be started through this route
-        and are rejected with RETRY_NOT_ALLOWED.
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-CSRF-TOKEN
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Obtain the session-bound token from the existing auth CSRF operation.
+      description: >-
+        Returns 202 quickly after accepting the orchestration task; inspect SSE/status for preparation,
+        reservation or provider errors. Repeated start never redispatches. Before dispatch, lack of a live
+        stream terminates without a provider call. Restart never automatically replays a durable dispatch
+        claim. Retired manual analysis requests cannot be started through this route and are rejected with
+        RETRY_NOT_ALLOWED.
       security:
-      - browserSession: [
-          ]
+        - browserSession: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -1385,24 +1260,21 @@ paths:
         schema:
           type: string
           format: uuid
-
   /api/chat/requests/{requestId}/cancel:
     post:
       operationId: cancelChatRequest
       tags:
-      - ChatRequests
+        - ChatRequests
       summary: Idempotently cancel, optionally discarding the turn and settling the full reservation
       description: >-
-        With discard=true and reconcileCost=false, remove the request turn content, permanently charge the full
-        existing reservation, and immediately release the user slot. Provider termination
-        is tracked separately in the background; discarded output must never reappear.
-        Without discard, finalize interrupted execution with the full existing reservation,
-        preserve content and release the user slot without waiting for provider completion.
-        For an analysis parent, stop creation of new children, fence descendant
-        writes and settle every created child reservation by this same conservative
-        rule. Release only unused envelope funds never transferred to a child.
-        Discard also deletes intermediate and final derived content; financial
-        and physical execution evidence survives. No additional parent charge.
+        With discard=true and reconcileCost=false, remove the request turn content, permanently charge the
+        full existing reservation, and immediately release the user slot. Provider termination is tracked
+        separately in the background; discarded output must never reappear. Without discard, finalize
+        interrupted execution with the full existing reservation, preserve content and release the user slot
+        without waiting for provider completion. For an analysis parent, stop creation of new children, fence
+        descendant writes and settle every created child reservation by this same conservative rule. Release
+        only unused envelope funds never transferred to a child. Discard also deletes intermediate and final
+        derived content; financial and physical execution evidence survives. No additional parent charge.
       responses:
         '202':
           description: Success
@@ -1453,38 +1325,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       parameters:
-      - name: discard
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: false
-        description: Explicit user Stop. Discard content and settle the full existing reservation.
-      - name: reconcileCost
-        in: query
-        required: false
-        description: With discard=true, book the pending reservation as an estimate,
-          release the user slot and reconcile only the original execution in the background.
-          Never dispatch again. False preserves legacy final full-reservation charging.
-          True with discard=false is invalid. Already measured charges are preserved.
-        schema:
-          type: boolean
-          default: false
-      - name: requestId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: X-CSRF-TOKEN
-        in: header
-        required: true
-        schema:
-          type: string
-        description: Obtain the session-bound token from the existing auth CSRF operation.
+        - name: discard
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Explicit user Stop. Discard content and settle the full existing reservation.
+        - name: reconcileCost
+          in: query
+          required: false
+          description: >-
+            With discard=true, book the pending reservation as an estimate, release the user slot and
+            reconcile only the original execution in the background. Never dispatch again. False preserves
+            legacy final full-reservation charging. True with discard=false is invalid. Already measured
+            charges are preserved.
+          schema:
+            type: boolean
+            default: false
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-CSRF-TOKEN
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Obtain the session-bound token from the existing auth CSRF operation.
       security:
-      - browserSession: [
-          ]
+        - browserSession: []
     parameters:
       - name: X-Bandee-Trace-ID
         in: header
@@ -1500,12 +1372,11 @@ paths:
         schema:
           type: string
           format: uuid
-
   /api/ai/budget:
     get:
       operationId: getOwnAiBudget
       tags:
-      - AiBudget
+        - AiBudget
       summary: Read own monthly or guest-lifetime budget snapshot
       responses:
         '200':
@@ -1557,8 +1428,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       security:
-      - browserSession: [
-          ]
+        - browserSession: []
 components:
   securitySchemes:
     browserSession:
@@ -1568,29 +1438,33 @@ components:
   schemas:
     ResponseLanguage:
       type: string
-      enum: [hu, en]
-      description: Default language of a newly generated answer; explicit translation targets and quoted content are preserved.
+      enum:
+        - hu
+        - en
+      description: >-
+        Default language of a newly generated answer; explicit translation targets and quoted content are
+        preserved.
     ExecutionState:
       type: string
       enum:
-      - AWAITING_STREAM
-      - PREPARING
-      - DISPATCHING
-      - STREAMING
-      - CANCEL_REQUESTED
-      - COMPLETED
-      - FAILED
-      - CANCELLED
-      - INTERRUPTED
-      - UNKNOWN
+        - AWAITING_STREAM
+        - PREPARING
+        - DISPATCHING
+        - STREAMING
+        - CANCEL_REQUESTED
+        - COMPLETED
+        - FAILED
+        - CANCELLED
+        - INTERRUPTED
+        - UNKNOWN
     AccountingState:
       type: string
       enum:
-      - NONE
-      - RESERVED
-      - SETTLED
-      - RELEASED
-      - UNCERTAIN
+        - NONE
+        - RESERVED
+        - SETTLED
+        - RELEASED
+        - UNCERTAIN
     Problem:
       type: object
       additionalProperties: false
@@ -1598,33 +1472,27 @@ components:
         code:
           type: string
           enum:
-          - UNAUTHENTICATED
-          - GUEST_EXPIRED
-          - GUEST_DISABLED
-          - SESSION_CONFLICT
-          - LINK_UNAVAILABLE
-          - FORBIDDEN
-          - NOT_FOUND
-          - INVALID_INPUT
-          - IDEMPOTENCY_CONFLICT
-          - USER_BUSY
-          - STREAM_BUSY
-          - STREAM_REQUIRED
-          - RETRY_NOT_ALLOWED
-          - RESOURCE_LIMIT
-          - BUDGET_UNAVAILABLE
-          - AI_UNAVAILABLE
-          - CONTEXT_TOO_LARGE
-          - PROVIDER_FAILURE
-          - OUTCOME_UNCERTAIN
-          - REQUEST_EXPIRED
-          - DRIVE_UNAVAILABLE
-          - DRIVE_ACCESS_LOST
-          - DRIVE_CHANGED
-          - DRIVE_LIMIT
-          - DRIVE_CONFIGURATION
-          - DRIVE_CONSENT_REQUIRED
-          - INTERNAL_ERROR
+            - UNAUTHENTICATED
+            - GUEST_EXPIRED
+            - GUEST_DISABLED
+            - SESSION_CONFLICT
+            - LINK_UNAVAILABLE
+            - FORBIDDEN
+            - NOT_FOUND
+            - INVALID_INPUT
+            - IDEMPOTENCY_CONFLICT
+            - USER_BUSY
+            - STREAM_BUSY
+            - STREAM_REQUIRED
+            - RETRY_NOT_ALLOWED
+            - RESOURCE_LIMIT
+            - BUDGET_UNAVAILABLE
+            - AI_UNAVAILABLE
+            - CONTEXT_TOO_LARGE
+            - PROVIDER_FAILURE
+            - OUTCOME_UNCERTAIN
+            - REQUEST_EXPIRED
+            - INTERNAL_ERROR
         message:
           type: string
         requestId:
@@ -1633,9 +1501,9 @@ components:
         retryAllowed:
           type: boolean
       required:
-      - code
-      - message
-      - retryAllowed
+        - code
+        - message
+        - retryAllowed
     Conversation:
       type: object
       additionalProperties: false
@@ -1656,35 +1524,27 @@ components:
           type: string
           format: date-time
       required:
-      - id
-      - title
-      - createdAt
-      - updatedAt
+        - id
+        - title
+        - createdAt
+        - updatedAt
     RenameConversation:
       type: object
       additionalProperties: false
-      required: [title]
+      required:
+        - title
       properties:
         title:
           type: string
           minLength: 1
           maxLength: 120
-          description: Surrounding whitespace is trimmed. The title must contain non-whitespace text and no control characters.
+          description: >-
+            Surrounding whitespace is trimmed. The title must contain non-whitespace text and no control
+            characters.
     Message:
       type: object
       additionalProperties: false
       properties:
-        automaticChat:
-          $ref: '#/components/schemas/AutomaticChatStatus'
-        driveSearchState:
-          $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
-        driveSources:
-          type: array
-          description: First page of cited Drive sources
-          items:
-            $ref: './google-drive.yaml#/components/schemas/DriveSource'
-        driveSourceTotal: { type: integer, format: int64, minimum: 0 }
-        driveSourcesNextCursor: { type: string, format: uuid }
         id:
           type: string
           format: uuid
@@ -1695,16 +1555,16 @@ components:
         role:
           type: string
           enum:
-          - USER
-          - ASSISTANT
+            - USER
+            - ASSISTANT
         content:
           type: string
         contentState:
           type: string
           enum:
-          - COMPLETE
-          - PARTIAL
-          - EMPTY
+            - COMPLETE
+            - PARTIAL
+            - EMPTY
         createdAt:
           type: string
           format: date-time
@@ -1712,63 +1572,39 @@ components:
           type: string
           format: uuid
       required:
-      - id
-      - sequence
-      - role
-      - content
-      - contentState
-      - createdAt
-    AutomaticChatStatus:
-      type: object
-      additionalProperties: false
-      required: [phase, completedNodes, totalNodes, documents, ranges, continuationAllowed]
-      description: Informational automatic processing state. It never requests a mode, scope or cost approval. Retrieval is non-exhaustive; only the frozen complete manifest can support coverage claims. Reads never dispatch work.
-      properties:
-        phase: { type: string, enum: [ACCEPTED, ROUTING, PLANNING, RUNNING, COMPLETED, WAITING_INDEX, WAITING_RESOURCE, WAITING_BUDGET, INVALIDATED, FAILED, INTERRUPTED, BLOCKED, DISCARDED] }
-        route: { type: string, enum: [NO_DOCUMENTS, RELEVANT_SEARCH, FULL_SCOPE] }
-        reason: { type: string, enum: [MODEL_CAPACITY, VERIFIED_PRICE_REQUIRED, PROFILE_EXPIRED, PERIOD_CHANGED, CONFIGURATION_CHANGED, PERSONAL_BUDGET, SHARED_BUDGET, INCOMPLETE_SCAN, INCOMPLETE_COVERAGE, SOURCE_CHANGED, SOURCE_VERIFICATION, NO_SUPPORTED_DOCUMENTS, NO_RELEVANT_SOURCES, DRIVE_CONSENT_REQUIRED, EXECUTION_UNCERTAIN, ROUTING_OR_PLAN_FAILED, INVALID_RESULT, REQUEST_EXPIRED] }
-        completedNodes: { type: integer, format: int64, minimum: 0 }
-        totalNodes: { type: integer, format: int64, minimum: 0 }
-        documents: { type: integer, format: int64, minimum: 0 }
-        ranges: { type: integer, format: int64, minimum: 0 }
-        continuationAllowed: { type: boolean, description: Explicit technical continuation only; never automatic on status or reconnect. Reuses the fixed plan and completed validated nodes; never re-routes or silently expands scope. }
-    ContinueAutomaticChat:
-      type: object
-      additionalProperties: false
-      required: [clientActionId]
-      properties:
-        clientActionId: { type: string, format: uuid, description: Idempotency key for one explicit technical continuation. }
+        - id
+        - sequence
+        - role
+        - content
+        - contentState
+        - createdAt
     RequestStatus:
       type: object
       additionalProperties: false
       properties:
-        automaticChat:
-          $ref: '#/components/schemas/AutomaticChatStatus'
-        driveSearchState:
-          $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
-        driveSources:
-          type: array
-          description: First page of cited Drive sources
-          items:
-            $ref: './google-drive.yaml#/components/schemas/DriveSource'
-        driveSourceTotal: { type: integer, format: int64, minimum: 0 }
-        driveSourcesNextCursor: { type: string, format: uuid }
         purpose:
           type: string
-          enum: [CHAT, VOICE_REVIEW, FIRST_TITLE]
+          enum:
+            - CHAT
+            - VOICE_REVIEW
+            - FIRST_TITLE
           default: CHAT
-          description: Immutable execution purpose. Auxiliary work has no chat message IDs and is never retryable via retryOf.
+          description: >-
+            Immutable execution purpose. Auxiliary work has no chat message IDs and is never retryable via
+            retryOf.
         interrupted:
           type: boolean
           default: false
-          description: Interruption is finalized and execution is detached; content is retained unless discarded=true. New requests may proceed without automatic paid replay.
+          description: >-
+            Interruption is finalized and execution is detached; content is retained unless discarded=true.
+            New requests may proceed without automatic paid replay.
         discarded:
           type: boolean
           default: false
           description: >-
-            Content was discarded by explicit user Stop. Do not display request status,
-            partial output or recovery actions. The booked charge may be estimated and new requests are
-            allowed independently of background provider termination.
+            Content was discarded by explicit user Stop. Do not display request status, partial output or
+            recovery actions. The booked charge may be estimated and new requests are allowed independently of
+            background provider termination.
         responseLanguage:
           $ref: '#/components/schemas/ResponseLanguage'
         id:
@@ -1812,8 +1648,15 @@ components:
           description: Non-negative USD decimal; never binary floating point.
         costReconciliation:
           type: string
-          enum: [NOT_REQUIRED, PENDING, ACTUAL, ESTIMATED, ADMIN_ADJUSTED]
-          description: PENDING keeps a booked estimate until verified original-execution evidence or the bounded deadline. ESTIMATED means that deadline expired without proof; no automatic refund.
+          enum:
+            - NOT_REQUIRED
+            - PENDING
+            - ACTUAL
+            - ESTIMATED
+            - ADMIN_ADJUSTED
+          description: >-
+            PENDING keeps a booked estimate until verified original-execution evidence or the bounded
+            deadline. ESTIMATED means that deadline expired without proof; no automatic refund.
         estimatedUsd:
           type: string
           pattern: ^[0-9]+\.[0-9]{9}$
@@ -1830,7 +1673,10 @@ components:
           type: string
           pattern: ^[0-9]+\.[0-9]{9}$
           example: '20.000000000'
-          description: Backward-compatible charged amount where available, including Stop estimates. Use chargedUsd for all finalized charges including administrative settlements; not necessarily measured provider cost.
+          description: >-
+            Backward-compatible charged amount where available, including Stop estimates. Use chargedUsd for
+            all finalized charges including administrative settlements; not necessarily measured provider
+            cost.
         createdAt:
           type: string
           format: date-time
@@ -1840,30 +1686,20 @@ components:
         problem:
           $ref: '#/components/schemas/Problem'
       required:
-      - responseLanguage
-      - id
-      - clientRequestId
-      - executionState
-      - accountingState
-      - retryAllowed
-      - executionConfirmedEnded
-      - createdAt
-      description: Content-free status. Auxiliary requests have no chat message IDs,
-        emit no raw provider-output deltas and do not allow retryOf. Their validated
-        result is read separately. Conversation and message IDs may be absent
-        after actual content deletion. Reading a request never triggers generation.
-        Unknown execution and uncertain accounting are separate concepts.
-        responseLanguage is the immutable language accepted for this request, including after restart or content deletion.
-    ChatDriveSourcePage:
-      type: object
-      additionalProperties: false
-      required: [items, total]
-      properties:
-        items:
-          type: array
-          items: { $ref: './google-drive.yaml#/components/schemas/DriveSource' }
-        total: { type: integer, format: int64, minimum: 0 }
-        nextCursor: { type: string, format: uuid }
+        - responseLanguage
+        - id
+        - clientRequestId
+        - executionState
+        - accountingState
+        - retryAllowed
+        - executionConfirmedEnded
+        - createdAt
+      description: >-
+        Content-free status. Auxiliary requests have no chat message IDs, emit no raw provider-output deltas
+        and do not allow retryOf. Their validated result is read separately. Conversation and message IDs may
+        be absent after actual content deletion. Reading a request never triggers generation. Unknown
+        execution and uncertain accounting are separate concepts. responseLanguage is the immutable language
+        accepted for this request, including after restart or content deletion.
     OwnBudget:
       type: object
       additionalProperties: false
@@ -1871,14 +1707,20 @@ components:
         hasEstimatedCharges:
           type: boolean
           default: false
-          description: The displayed budget includes a pending or deadline-finalized Stop estimate in this period (the shared budget for its owner, the entire lifetime for a guest).
+          description: >-
+            The displayed budget includes a pending or deadline-finalized Stop estimate in this period (the
+            shared budget for its owner, the entire lifetime for a guest).
         pendingCostReconciliation:
           type: boolean
           default: false
-          description: An original stopped execution is still awaiting bounded cost reconciliation; this alone does not block new requests.
+          description: >-
+            An original stopped execution is still awaiting bounded cost reconciliation; this alone does not
+            block new requests.
         budgetScope:
           type: string
-          enum: [MONTHLY, GUEST_LIFETIME]
+          enum:
+            - MONTHLY
+            - GUEST_LIFETIME
           default: MONTHLY
           description: Guest lifetime amounts never reset on a calendar month boundary.
         periodStart:
@@ -1890,7 +1732,7 @@ components:
         currency:
           type: string
           enum:
-          - USD
+            - USD
         owner:
           type: boolean
         personalLimitUsd:
@@ -1923,15 +1765,15 @@ components:
         blockReason:
           type: string
           enum:
-          - NONE
-          - ZERO_PERSONAL_BUDGET
-          - PERSONAL_LIMIT
-          - GLOBAL_LIMIT
-          - AI_DISABLED
-          - UNRESOLVED_EXECUTION
-          - CONFIGURATION_REQUIRED
-          - GUEST_DISABLED
-          - GUEST_POOL_LIMIT
+            - NONE
+            - ZERO_PERSONAL_BUDGET
+            - PERSONAL_LIMIT
+            - GLOBAL_LIMIT
+            - AI_DISABLED
+            - UNRESOLVED_EXECUTION
+            - CONFIGURATION_REQUIRED
+            - GUEST_DISABLED
+            - GUEST_POOL_LIMIT
         globalLimitUsd:
           type: string
           pattern: ^[0-9]+\.[0-9]{9}$
@@ -1953,58 +1795,43 @@ components:
           example: '20.000000000'
           description: Non-negative USD decimal; never binary floating point.
       required:
-      - periodStart
-      - periodEnd
-      - currency
-      - owner
-      - spentUsd
-      - reservedUsd
-      - unresolvedPriorUsd
-      - availableUsd
-      - canGenerate
-      - blockReason
+        - periodStart
+        - periodEnd
+        - currency
+        - owner
+        - spentUsd
+        - reservedUsd
+        - unresolvedPriorUsd
+        - availableUsd
+        - canGenerate
+        - blockReason
       description: >-
-        Only own usage. For the registered owner, availableUsd is global availability
-        and global* fields are present. For other registered users global* fields are
-        absent, availableUsd is personal availability and canGenerate also checks the
-        undisclosed global cap. For GUEST_LIFETIME, owner is always false, periodStart
-        is guest creation, periodEnd is the absolute lifetime deadline, personalLimitUsd
-        is the lifetime allowance and spentUsd/reservedUsd cover the entire guest
-        lifetime. unresolvedPriorUsd is zero because all guest reservations are already
-        counted in reservedUsd across months. availableUsd is remaining lifetime
-        allowance; canGenerate additionally checks undisclosed global and monthly
-        guest-pool capacity and guest policy. Neither shared pool amounts nor other
-        users' usage is exposed. All amounts use nine-decimal USD strings. A balance
-        snapshot is not a reservation or a guarantee that another call fits.
+        Only own usage. For the registered owner, availableUsd is global availability and global* fields are
+        present. For other registered users global* fields are absent, availableUsd is personal availability
+        and canGenerate also checks the undisclosed global cap. For GUEST_LIFETIME, owner is always false,
+        periodStart is guest creation, periodEnd is the absolute lifetime deadline, personalLimitUsd is the
+        lifetime allowance and spentUsd/reservedUsd cover the entire guest lifetime. unresolvedPriorUsd is
+        zero because all guest reservations are already counted in reservedUsd across months. availableUsd is
+        remaining lifetime allowance; canGenerate additionally checks undisclosed global and monthly
+        guest-pool capacity and guest policy. Neither shared pool amounts nor other users' usage is exposed.
+        All amounts use nine-decimal USD strings. A balance snapshot is not a reservation or a guarantee that
+        another call fits.
     CreateRequest:
-      description: For a new turn content is required and nonblank, retryOf is absent.
-        For a retry retryOf is required and content must be absent; it references
-        the latest failed/cancelled turn in this conversation. Validate these mutually
-        exclusive cases server-side. UUID reuse with different normalized content/conversation/retry
-        target or normalized responseLanguage is 409. Missing responseLanguage normalizes
-        to hu for compatibility. A repeated clientRequestId must retain its original
-        language even if the GUI language changed. A retry with a new clientRequestId
-        uses the newly selected responseLanguage; it does not inherit the old answer's
-        language. Changing the GUI alone never starts or cancels generation.
-        inputAnalysisId is allowed only for a new turn, participates in idempotency,
-        and cannot reference another user, conversation, language or an incomplete task.
-        Retired manual analysis parents cannot start, retry or continue.
-        Document processing is selected by automatic chat when enabled; no manual
-        scope selection or analysis-plan approval is accepted.
+      description: Create a request in an owned conversation using the accepted text and conversation history.
       oneOf:
-      - $ref: '#/components/schemas/CreateNewTurn'
-      - $ref: '#/components/schemas/RetryTurn'
+        - $ref: '#/components/schemas/CreateNewTurn'
+        - $ref: '#/components/schemas/RetryTurn'
     PublicStreamEvent:
-      description: SSE event name equals type. JSON data uses this envelope; sequence
-        increases within one connection and is not a replay cursor. ready has no delta/status;
-        delta requires delta; status and terminal require status. terminal status
-        must be terminal. No raw provider errors. Heartbeats are SSE comments, not
+      description: >-
+        SSE event name equals type. JSON data uses this envelope; sequence increases within one connection and
+        is not a replay cursor. ready has no delta/status; delta requires delta; status and terminal require
+        status. terminal status must be terminal. No raw provider errors. Heartbeats are SSE comments, not
         JSON events.
       oneOf:
-      - $ref: '#/components/schemas/PublicReadyEvent'
-      - $ref: '#/components/schemas/PublicStatusEvent'
-      - $ref: '#/components/schemas/PublicDeltaEvent'
-      - $ref: '#/components/schemas/PublicTerminalEvent'
+        - $ref: '#/components/schemas/PublicReadyEvent'
+        - $ref: '#/components/schemas/PublicStatusEvent'
+        - $ref: '#/components/schemas/PublicDeltaEvent'
+        - $ref: '#/components/schemas/PublicTerminalEvent'
       discriminator:
         propertyName: type
         mapping:
@@ -2023,7 +1850,7 @@ components:
         nextCursor:
           type: string
       required:
-      - items
+        - items
     MessagePage:
       type: object
       additionalProperties: false
@@ -2035,7 +1862,7 @@ components:
         nextCursor:
           type: string
       required:
-      - items
+        - items
     PublicReadyEvent:
       type: object
       additionalProperties: false
@@ -2043,7 +1870,7 @@ components:
         type:
           type: string
           enum:
-          - ready
+            - ready
         requestId:
           type: string
           format: uuid
@@ -2052,9 +1879,9 @@ components:
           format: int64
           minimum: 0
       required:
-      - type
-      - requestId
-      - sequence
+        - type
+        - requestId
+        - sequence
     PublicStatusEvent:
       type: object
       additionalProperties: false
@@ -2062,7 +1889,7 @@ components:
         type:
           type: string
           enum:
-          - status
+            - status
         requestId:
           type: string
           format: uuid
@@ -2073,10 +1900,10 @@ components:
         status:
           $ref: '#/components/schemas/RequestStatus'
       required:
-      - type
-      - requestId
-      - sequence
-      - status
+        - type
+        - requestId
+        - sequence
+        - status
     PublicDeltaEvent:
       type: object
       additionalProperties: false
@@ -2084,7 +1911,7 @@ components:
         type:
           type: string
           enum:
-          - delta
+            - delta
         requestId:
           type: string
           format: uuid
@@ -2095,10 +1922,10 @@ components:
         delta:
           type: string
       required:
-      - type
-      - requestId
-      - sequence
-      - delta
+        - type
+        - requestId
+        - sequence
+        - delta
     PublicTerminalEvent:
       type: object
       additionalProperties: false
@@ -2106,7 +1933,7 @@ components:
         type:
           type: string
           enum:
-          - terminal
+            - terminal
         requestId:
           type: string
           format: uuid
@@ -2117,33 +1944,34 @@ components:
         status:
           $ref: '#/components/schemas/RequestStatus'
       required:
-      - type
-      - requestId
-      - sequence
-      - status
+        - type
+        - requestId
+        - sequence
+        - status
     CreateNewTurn:
       type: object
       additionalProperties: false
       required:
-      - clientRequestId
-      - content
+        - clientRequestId
+        - content
       properties:
         inputAnalysisId:
           type: string
           format: uuid
           description: >-
-            Optional completed VOICE_REVIEW request owned by this user in this
-            conversation and language. The supplied content must equal its reviewed
-            text exactly. It can attach a validated short title to the first turn;
-            reuse cannot create a second turn. Include it in the idempotency hash.
-            A REVIEW decision may be sent only through an explicit user Send action;
-            automatic voice submission requires ACCEPT. Omit this field after manual
-            edits; edited text is ordinary user input and receives no analysis title.
+            Optional completed VOICE_REVIEW request owned by this user in this conversation and language. The
+            supplied content must equal its reviewed text exactly. It can attach a validated short title to
+            the first turn; reuse cannot create a second turn. Include it in the idempotency hash. A REVIEW
+            decision may be sent only through an explicit user Send action; automatic voice submission
+            requires ACCEPT. Omit this field after manual edits; edited text is ordinary user input and
+            receives no analysis title.
         responseLanguage:
           allOf:
-          - $ref: '#/components/schemas/ResponseLanguage'
+            - $ref: '#/components/schemas/ResponseLanguage'
           default: hu
-          description: Omission normalizes to hu. The accepted value is persisted before preparation. Explicit null or unsupported values are invalid.
+          description: >-
+            Omission normalizes to hu. The accepted value is persisted before preparation. Explicit null or
+            unsupported values are invalid.
         clientRequestId:
           type: string
           format: uuid
@@ -2155,14 +1983,16 @@ components:
       type: object
       additionalProperties: false
       required:
-      - clientRequestId
-      - retryOf
+        - clientRequestId
+        - retryOf
       properties:
         responseLanguage:
           allOf:
-          - $ref: '#/components/schemas/ResponseLanguage'
+            - $ref: '#/components/schemas/ResponseLanguage'
           default: hu
-          description: Omission normalizes to hu. The accepted value is persisted before preparation. Explicit null or unsupported values are invalid.
+          description: >-
+            Omission normalizes to hu. The accepted value is persisted before preparation. Explicit null or
+            unsupported values are invalid.
         clientRequestId:
           type: string
           format: uuid
@@ -2172,21 +2002,33 @@ components:
     CreateInputAnalysis:
       type: object
       additionalProperties: false
-      required: [clientRequestId, mode, responseLanguage]
+      required:
+        - clientRequestId
+        - mode
+        - responseLanguage
       properties:
-        clientRequestId: {type: string, format: uuid}
+        clientRequestId:
+          type: string
+          format: uuid
         responseLanguage:
           $ref: '#/components/schemas/ResponseLanguage'
         mode:
           type: string
-          enum: [VOICE_REVIEW, FIRST_TITLE]
-          description: VOICE_REVIEW checks typed or recognized text before chat submission; FIRST_TITLE only generates a title for a saved first message.
+          enum:
+            - VOICE_REVIEW
+            - FIRST_TITLE
+          description: >-
+            VOICE_REVIEW checks typed or recognized text before chat submission; FIRST_TITLE only generates a
+            title for a saved first message.
         inputKind:
           type: string
-          enum: [TYPED, SPEECH]
-          description: Input origin for function-specific model selection. Allowed only for VOICE_REVIEW.
-            Omission retains the historical speech-review assignment. Participates in idempotency.
-            The server selects the model; this field never grants access or bypasses review.
+          enum:
+            - TYPED
+            - SPEECH
+          description: >-
+            Input origin for function-specific model selection. Allowed only for VOICE_REVIEW. Omission
+            retains the historical speech-review assignment. Participates in idempotency. The server selects
+            the model; this field never grants access or bypasses review.
         content:
           type: string
           minLength: 1
@@ -2195,12 +2037,24 @@ components:
     InputAnalysisResult:
       type: object
       additionalProperties: false
-      required: [requestId, mode, responseLanguage, originalText, reviewedText, decision, reviewReason, uncertainTerms]
+      required:
+        - requestId
+        - mode
+        - responseLanguage
+        - originalText
+        - reviewedText
+        - decision
+        - reviewReason
+        - uncertainTerms
       properties:
-        requestId: {type: string, format: uuid}
+        requestId:
+          type: string
+          format: uuid
         mode:
           type: string
-          enum: [VOICE_REVIEW, FIRST_TITLE]
+          enum:
+            - VOICE_REVIEW
+            - FIRST_TITLE
         responseLanguage:
           $ref: '#/components/schemas/ResponseLanguage'
         originalText:
@@ -2212,35 +2066,46 @@ components:
           minLength: 1
           maxLength: 16000
           description: >-
-            Conservative correction, never an answer. Preserve meaning, unknown terms,
-            names, numbers, negation and code. FIRST_TITLE returns originalText unchanged.
+            Conservative correction, never an answer. Preserve meaning, unknown terms, names, numbers,
+            negation and code. FIRST_TITLE returns originalText unchanged.
         decision:
           type: string
-          enum: [ACCEPT, REVIEW]
+          enum:
+            - ACCEPT
+            - REVIEW
           description: >-
-            A model-assisted estimate, not proof of recognition accuracy. Short
-            contextually meaningful replies are valid. Ambiguity, uncertain terms or
-            possible meaning changes require REVIEW and stop automatic submission.
+            A model-assisted estimate, not proof of recognition accuracy. Short contextually meaningful
+            replies are valid. Ambiguity, uncertain terms or possible meaning changes require REVIEW and stop
+            automatic submission.
         reviewReason:
           type: string
-          enum: [NONE, AMBIGUOUS, UNCERTAIN_TERMS, POSSIBLE_MEANING_CHANGE]
-          description: Localized by the frontend; no model-generated diagnostic prose. ACCEPT requires NONE and empty uncertainTerms; REVIEW requires a non-NONE reason. FIRST_TITLE uses ACCEPT and NONE.
+          enum:
+            - NONE
+            - AMBIGUOUS
+            - UNCERTAIN_TERMS
+            - POSSIBLE_MEANING_CHANGE
+          description: >-
+            Localized by the frontend; no model-generated diagnostic prose. ACCEPT requires NONE and empty
+            uncertainTerms; REVIEW requires a non-NONE reason. FIRST_TITLE uses ACCEPT and NONE.
         uncertainTerms:
           type: array
           maxItems: 20
           uniqueItems: true
-          items: {type: string, minLength: 1, maxLength: 200}
+          items:
+            type: string
+            minLength: 1
+            maxLength: 200
           description: >-
-            Literal substrings of reviewedText, validated server-side. Mark as
-            uncertain, not as confirmed errors. Never replace an unknown term solely
-            because it is absent from a dictionary. Empty for FIRST_TITLE.
+            Literal substrings of reviewedText, validated server-side. Mark as uncertain, not as confirmed
+            errors. Never replace an unknown term solely because it is absent from a dictionary. Empty for
+            FIRST_TITLE.
         shortTitle:
           type: string
           minLength: 1
           maxLength: 32
           description: >-
-            Optional localized one- or two-word title, at most 32 Unicode code points.
-            For VOICE_REVIEW, generated in the same call for typed or recognized text only when the conversation has no
-            saved user turn. For FIRST_TITLE, applied atomically only if its original
-            first-message anchor still matches and no newer title has been applied.
-            The frontend must also handle pixel overflow on narrow screens.
+            Optional localized one- or two-word title, at most 32 Unicode code points. For VOICE_REVIEW,
+            generated in the same call for typed or recognized text only when the conversation has no saved
+            user turn. For FIRST_TITLE, applied atomically only if its original first-message anchor still
+            matches and no newer title has been applied. The frontend must also handle pixel overflow on
+            narrow screens.

@@ -1,51 +1,34 @@
-openapi: "3.0.3"
+openapi: 3.0.3
 info:
-  title: "Bandee Backend API"
-  description: "REST API specification for the Bandee backend service."
-  version: "0.0.1-SNAPSHOT"
+  title: Bandee Backend API
+  description: REST API specification for the Bandee backend service.
+  version: 0.0.1-SNAPSHOT
 paths:
   /api/chat/traces/events:
-    $ref: './tracing.yaml#/paths/~1api~1chat~1traces~1events'
-  /api/chat/requests/{requestId}/continue:
-    $ref: './chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1continue'
-  /api/drive:
-    $ref: './google-drive.yaml#/paths/~1api~1drive'
-  /api/drive/preview:
-    $ref: './google-drive.yaml#/paths/~1api~1drive~1preview'
-  /api/drive/import:
-    $ref: './google-drive.yaml#/paths/~1api~1drive~1import'
-  /api/drive/processing:
-    $ref: './google-drive.yaml#/paths/~1api~1drive~1processing'
-  /api/drive/documents:
-    $ref: './google-drive.yaml#/paths/~1api~1drive~1documents'
-  /api/drive/files/{fileId}/preview:
-    $ref: './google-drive.yaml#/paths/~1api~1drive~1files~1{fileId}~1preview'
-  /api/drive/documents/{documentId}:
-    $ref: './google-drive.yaml#/paths/~1api~1drive~1documents~1{documentId}'
-  /api/drive/disconnect:
-    $ref: './google-drive.yaml#/paths/~1api~1drive~1disconnect'
+    $ref: ./tracing.yaml#/paths/~1api~1chat~1traces~1events
   /api/account-deletion/options:
-    $ref: './account-deletion.yaml#/paths/~1api~1account-deletion~1options'
+    $ref: ./account-deletion.yaml#/paths/~1api~1account-deletion~1options
   /api/account-deletion/intents:
-    $ref: './account-deletion.yaml#/paths/~1api~1account-deletion~1intents'
+    $ref: ./account-deletion.yaml#/paths/~1api~1account-deletion~1intents
   /api/oauth2/authorization/google-delete:
-    $ref: './account-deletion.yaml#/paths/~1api~1oauth2~1authorization~1google-delete'
+    $ref: ./account-deletion.yaml#/paths/~1api~1oauth2~1authorization~1google-delete
   /api/account-deletion:
-    $ref: './account-deletion.yaml#/paths/~1api~1account-deletion'
+    $ref: ./account-deletion.yaml#/paths/~1api~1account-deletion
   /api/account-deletion/status:
-    $ref: './account-deletion.yaml#/paths/~1api~1account-deletion~1status'
+    $ref: ./account-deletion.yaml#/paths/~1api~1account-deletion~1status
   /api/auth/session:
     get:
-      tags: [Auth]
+      tags:
+        - Auth
       operationId: getSession
       summary: Read the current browser session
       description: >-
-        Public endpoint. Never cached. Authentication uses an HttpOnly same-origin
-        session cookie. Reading this endpoint never creates a guest, renews guest
-        activity or revives expired access. Guest availability is independent of
-        Google availability. All user data comes from the current server-side principal.
+        Public endpoint. Never cached. Authentication uses an HttpOnly same-origin session cookie. Reading
+        this endpoint never creates a guest, renews guest activity or revives expired access. Guest
+        availability is independent of Google availability. All user data comes from the current server-side
+        principal.
       responses:
-        "200":
+        '200':
           description: Authentication availability and current user
           content:
             application/json:
@@ -53,11 +36,12 @@ paths:
                 $ref: '#/components/schemas/AuthSession'
   /api/auth/csrf:
     get:
-      tags: [Auth]
+      tags:
+        - Auth
       operationId: getCsrf
       summary: Obtain a session-bound CSRF token before a state-changing request
       responses:
-        "200":
+        '200':
           description: Send the token in the named header, including on logout
           content:
             application/json:
@@ -65,83 +49,90 @@ paths:
                 $ref: '#/components/schemas/CsrfToken'
   /api/auth/logout:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       operationId: logout
       summary: Invalidate the browser session and retire guest access
       description: >-
-        For registered users only the current session is invalidated. For guests
-        this also expires the guest and revokes all its sessions; active work is
-        cancelled through the normal execution lifecycle and content deletion is
-        queued. Cancellation never proves zero provider cost. No guest recovery
-        is available after logout. The frontend must explain this before submission.
+        For registered users only the current session is invalidated. For guests this also expires the guest
+        and revokes all its sessions; active work is cancelled through the normal execution lifecycle and
+        content deletion is queued. Cancellation never proves zero provider cost. No guest recovery is
+        available after logout. The frontend must explain this before submission.
       parameters:
         - in: header
           name: X-CSRF-TOKEN
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "204": { description: Session invalidated and cookie deleted }
-        "403": { description: Missing or invalid CSRF token }
+        '204':
+          description: Session invalidated and cookie deleted
+        '403':
+          description: Missing or invalid CSRF token
   /api/oauth2/authorization/google:
     get:
-      tags: [Auth]
+      tags:
+        - Auth
       operationId: startGoogleLogin
       summary: Navigate the browser here to start Google OpenID Connect login
-      description: Only openid, email and profile scopes. The backend validates state, nonce, issuer, signature and audience. Any Google account with a verified email address may sign in and receives its own Bandee user identity. Disabled Bandee users remain blocked.
+      description: >-
+        Only openid, email and profile scopes. The backend validates state, nonce, issuer, signature and
+        audience. Any Google account with a verified email address may sign in and receives its own Bandee
+        user identity. Disabled Bandee users remain blocked.
       responses:
-        "302": { description: Redirect to Google }
-        "404": { description: Google login is not configured }
+        '302':
+          description: Redirect to Google
+        '404':
+          description: Google login is not configured
   /api/login/oauth2/code/google:
     get:
-      tags: [Auth]
+      tags:
+        - Auth
       operationId: googleCallback
       summary: Google authorization-code callback handled by Spring Security
       description: >-
-        Success redirects to the configured frontend origin. Failure redirects there
-        with login=failed and no provider details. Session cookies are HttpOnly and
-        SameSite=Lax; HTTPS deployments require Secure. A guest-link authorization
-        request is distinguished by its server-side, session-bound state. For a new
-        Google identity, linking atomically upgrades the same active guest UUID and
-        grants the registration monthly budget once. Existing identities never merge.
-        A failed link preserves the still-valid guest session and records only a safe
-        link result. Success revokes all old guest sessions and issues a fresh registered
-        session and CSRF token. Ordinary Google login never silently links a guest.
+        Success redirects to the configured frontend origin. Failure redirects there with login=failed and no
+        provider details. Session cookies are HttpOnly and SameSite=Lax; HTTPS deployments require Secure. A
+        guest-link authorization request is distinguished by its server-side, session-bound state. For a new
+        Google identity, linking atomically upgrades the same active guest UUID and grants the registration
+        monthly budget once. Existing identities never merge. A failed link preserves the still-valid guest
+        session and records only a safe link result. Success revokes all old guest sessions and issues a fresh
+        registered session and CSRF token. Ordinary Google login never silently links a guest.
       responses:
-        "302": { description: Redirect to the frontend }
+        '302':
+          description: Redirect to the frontend
   /api/auth/guest:
-    $ref: "./guest-access.yaml#/paths/~1api~1auth~1guest"
+    $ref: ./guest-access.yaml#/paths/~1api~1auth~1guest
   /api/auth/guest/link:
-    $ref: "./guest-access.yaml#/paths/~1api~1auth~1guest~1link"
+    $ref: ./guest-access.yaml#/paths/~1api~1auth~1guest~1link
   /api/oauth2/authorization/google-link:
-    $ref: "./guest-access.yaml#/paths/~1api~1oauth2~1authorization~1google-link"
+    $ref: ./guest-access.yaml#/paths/~1api~1oauth2~1authorization~1google-link
   /api/chat/conversations:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations"
+    $ref: ./chat-v1.yaml#/paths/~1api~1chat~1conversations
   /api/chat/conversations/{conversationId}:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}"
+    $ref: ./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}
   /api/chat/conversations/{conversationId}/messages:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1messages"
+    $ref: ./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1messages
   /api/chat/conversations/{conversationId}/input-analyses:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1input-analyses"
+    $ref: ./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1input-analyses
   /api/chat/conversations/{conversationId}/input-analyses/discard:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1input-analyses~1discard"
+    $ref: ./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1input-analyses~1discard
   /api/chat/input-analyses/{requestId}:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1input-analyses~1{requestId}"
+    $ref: ./chat-v1.yaml#/paths/~1api~1chat~1input-analyses~1{requestId}
   /api/chat/conversations/{conversationId}/requests:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1requests"
+    $ref: ./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1requests
   /api/chat/conversations/{conversationId}/requests/discard:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1requests~1discard"
+    $ref: ./chat-v1.yaml#/paths/~1api~1chat~1conversations~1{conversationId}~1requests~1discard
   /api/chat/requests/{requestId}:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}"
+    $ref: ./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}
   /api/chat/requests/{requestId}/stream:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1stream"
-  /api/chat/requests/{requestId}/drive-sources:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1drive-sources"
+    $ref: ./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1stream
   /api/chat/requests/{requestId}/start:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1start"
+    $ref: ./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1start
   /api/chat/requests/{requestId}/cancel:
-    $ref: "./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1cancel"
+    $ref: ./chat-v1.yaml#/paths/~1api~1chat~1requests~1{requestId}~1cancel
   /api/ai/budget:
-    $ref: "./chat-v1.yaml#/paths/~1api~1ai~1budget"
+    $ref: ./chat-v1.yaml#/paths/~1api~1ai~1budget
 components:
   securitySchemes:
     browserSession:
@@ -150,100 +141,72 @@ components:
       name: BANDEE_SESSION
   schemas:
     TraceBatch:
-      $ref: '../shared/tracing.yaml#/components/schemas/TraceBatch'
+      $ref: ../shared/tracing.yaml#/components/schemas/TraceBatch
     TraceEvent:
-      $ref: '../shared/tracing.yaml#/components/schemas/TraceEvent'
+      $ref: ../shared/tracing.yaml#/components/schemas/TraceEvent
     TraceReceipt:
-      $ref: '../shared/tracing.yaml#/components/schemas/TraceReceipt'
+      $ref: ../shared/tracing.yaml#/components/schemas/TraceReceipt
     RenameConversation:
-      $ref: "./chat-v1.yaml#/components/schemas/RenameConversation"
-    DriveConnection:
-      $ref: './google-drive.yaml#/components/schemas/DriveConnection'
-    DriveFolderInput:
-      $ref: './google-drive.yaml#/components/schemas/DriveFolderInput'
-    DriveFolderPreview:
-      $ref: './google-drive.yaml#/components/schemas/DriveFolderPreview'
-    DriveFolderConfirmation:
-      $ref: './google-drive.yaml#/components/schemas/DriveFolderConfirmation'
-    DriveCloudConsent:
-      $ref: './google-drive.yaml#/components/schemas/DriveCloudConsent'
-    DriveImportConsent:
-      $ref: './google-drive.yaml#/components/schemas/DriveImportConsent'
-    DriveIndexStatus:
-      $ref: './google-drive.yaml#/components/schemas/DriveIndexStatus'
-    DriveScanStatus:
-      $ref: './google-drive.yaml#/components/schemas/DriveScanStatus'
-    DriveDocumentStatus:
-      $ref: './google-drive.yaml#/components/schemas/DriveDocumentStatus'
-    DriveDocumentPage:
-      $ref: './google-drive.yaml#/components/schemas/DriveDocumentPage'
-    DriveProcessingStatus:
-      $ref: './google-drive.yaml#/components/schemas/DriveProcessingStatus'
-    DriveProcessingProgress:
-      $ref: './google-drive.yaml#/components/schemas/DriveProcessingProgress'
-    DriveDisconnect:
-      $ref: './google-drive.yaml#/components/schemas/DriveDisconnect'
-    DriveSearchState:
-      $ref: './google-drive.yaml#/components/schemas/DriveSearchState'
-    DriveSource:
-      $ref: './google-drive.yaml#/components/schemas/DriveSource'
-    ChatDriveSourcePage:
-      $ref: './chat-v1.yaml#/components/schemas/ChatDriveSourcePage'
+      $ref: ./chat-v1.yaml#/components/schemas/RenameConversation
     CreateInputAnalysis:
-      $ref: "./chat-v1.yaml#/components/schemas/CreateInputAnalysis"
+      $ref: ./chat-v1.yaml#/components/schemas/CreateInputAnalysis
     InputAnalysisResult:
-      $ref: "./chat-v1.yaml#/components/schemas/InputAnalysisResult"
+      $ref: ./chat-v1.yaml#/components/schemas/InputAnalysisResult
     ResponseLanguage:
-      $ref: "./chat-v1.yaml#/components/schemas/ResponseLanguage"
+      $ref: ./chat-v1.yaml#/components/schemas/ResponseLanguage
     ExecutionState:
-      $ref: "./chat-v1.yaml#/components/schemas/ExecutionState"
+      $ref: ./chat-v1.yaml#/components/schemas/ExecutionState
     AccountingState:
-      $ref: "./chat-v1.yaml#/components/schemas/AccountingState"
+      $ref: ./chat-v1.yaml#/components/schemas/AccountingState
     Problem:
-      $ref: "./chat-v1.yaml#/components/schemas/Problem"
+      $ref: ./chat-v1.yaml#/components/schemas/Problem
     Conversation:
-      $ref: "./chat-v1.yaml#/components/schemas/Conversation"
+      $ref: ./chat-v1.yaml#/components/schemas/Conversation
     Message:
-      $ref: "./chat-v1.yaml#/components/schemas/Message"
+      $ref: ./chat-v1.yaml#/components/schemas/Message
     RequestStatus:
-      $ref: "./chat-v1.yaml#/components/schemas/RequestStatus"
+      $ref: ./chat-v1.yaml#/components/schemas/RequestStatus
     OwnBudget:
-      $ref: "./chat-v1.yaml#/components/schemas/OwnBudget"
+      $ref: ./chat-v1.yaml#/components/schemas/OwnBudget
     CreateRequest:
-      $ref: "./chat-v1.yaml#/components/schemas/CreateRequest"
+      $ref: ./chat-v1.yaml#/components/schemas/CreateRequest
     PublicStreamEvent:
-      $ref: "./chat-v1.yaml#/components/schemas/PublicStreamEvent"
+      $ref: ./chat-v1.yaml#/components/schemas/PublicStreamEvent
     ConversationPage:
-      $ref: "./chat-v1.yaml#/components/schemas/ConversationPage"
+      $ref: ./chat-v1.yaml#/components/schemas/ConversationPage
     MessagePage:
-      $ref: "./chat-v1.yaml#/components/schemas/MessagePage"
+      $ref: ./chat-v1.yaml#/components/schemas/MessagePage
     PublicReadyEvent:
-      $ref: "./chat-v1.yaml#/components/schemas/PublicReadyEvent"
+      $ref: ./chat-v1.yaml#/components/schemas/PublicReadyEvent
     PublicStatusEvent:
-      $ref: "./chat-v1.yaml#/components/schemas/PublicStatusEvent"
+      $ref: ./chat-v1.yaml#/components/schemas/PublicStatusEvent
     PublicDeltaEvent:
-      $ref: "./chat-v1.yaml#/components/schemas/PublicDeltaEvent"
+      $ref: ./chat-v1.yaml#/components/schemas/PublicDeltaEvent
     PublicTerminalEvent:
-      $ref: "./chat-v1.yaml#/components/schemas/PublicTerminalEvent"
+      $ref: ./chat-v1.yaml#/components/schemas/PublicTerminalEvent
     CreateNewTurn:
-      $ref: "./chat-v1.yaml#/components/schemas/CreateNewTurn"
+      $ref: ./chat-v1.yaml#/components/schemas/CreateNewTurn
     RetryTurn:
-      $ref: "./chat-v1.yaml#/components/schemas/RetryTurn"
+      $ref: ./chat-v1.yaml#/components/schemas/RetryTurn
     AuthSession:
-      $ref: './guest-access.yaml#/components/schemas/AuthSession'
+      $ref: ./guest-access.yaml#/components/schemas/AuthSession
     CurrentUser:
-      $ref: './guest-access.yaml#/components/schemas/CurrentUser'
+      $ref: ./guest-access.yaml#/components/schemas/CurrentUser
     GuestAccess:
-      $ref: './guest-access.yaml#/components/schemas/GuestAccess'
+      $ref: ./guest-access.yaml#/components/schemas/GuestAccess
     GuestSession:
-      $ref: './guest-access.yaml#/components/schemas/GuestSession'
+      $ref: ./guest-access.yaml#/components/schemas/GuestSession
     GuestLinkStart:
-      $ref: './guest-access.yaml#/components/schemas/GuestLinkStart'
+      $ref: ./guest-access.yaml#/components/schemas/GuestLinkStart
     GuestLinkResult:
-      $ref: './guest-access.yaml#/components/schemas/GuestLinkResult'
+      $ref: ./guest-access.yaml#/components/schemas/GuestLinkResult
     CsrfToken:
       type: object
-      required: [headerName, token]
+      required:
+        - headerName
+        - token
       properties:
-        headerName: { type: string }
-        token: { type: string }
+        headerName:
+          type: string
+        token:
+          type: string
