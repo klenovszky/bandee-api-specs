@@ -1271,10 +1271,8 @@ paths:
         full existing reservation, and immediately release the user slot. Provider termination is tracked
         separately in the background; discarded output must never reappear. Without discard, finalize
         interrupted execution with the full existing reservation, preserve content and release the user slot
-        without waiting for provider completion. For an analysis parent, stop creation of new children, fence
-        descendant writes and settle every created child reservation by this same conservative rule. Release
-        only unused envelope funds never transferred to a child. Discard also deletes intermediate and final
-        derived content; financial and physical execution evidence survives. No additional parent charge.
+        without waiting for provider completion. Discarded turn content is deleted while AI accounting
+        and physical execution evidence survives.
       responses:
         '202':
           description: Success

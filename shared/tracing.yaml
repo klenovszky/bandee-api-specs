@@ -152,7 +152,7 @@ components:
       properties:
         category:
           type: string
-          enum: [CONFIGURATION, SOURCE_INDEX, DRIVE_VERIFY, DRIVE_HTTP, INPUT_BUILD, CAPABILITY_HTTP, TOKEN_HTTP, PLAN_GRAPH, RESERVATION, DATABASE, SCHEDULING, TELEMETRY, FINALIZATION, PROVIDER_WAIT]
+          enum: [CONFIGURATION, INPUT_BUILD, CAPABILITY_HTTP, TOKEN_HTTP, RESERVATION, DATABASE, SCHEDULING, TELEMETRY, FINALIZATION, PROVIDER_WAIT]
         exclusiveUs:
           type: integer
           format: int64
@@ -172,7 +172,7 @@ components:
           minimum: 1
         phase:
           type: string
-          enum: [ROUTING, PLANNING, EXECUTION, PUBLISHING, FINALIZATION]
+          enum: [PLANNING, EXECUTION, PUBLISHING, FINALIZATION]
         startUs:
           type: integer
           format: int64
